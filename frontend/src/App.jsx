@@ -202,10 +202,10 @@ export default function App() {
 
     const isNts = strategyConfig?.strategy === "nts";
     const rfPerDc = strategyConfig?.rfPerDc ?? {};
+    const rf = strategyConfig?.rf ?? 3;
     let replicas = [];
 
     if (!isNts) {
-      const rf = strategyConfig?.rf ?? 3;
       const seen = new Set();
       let curr = primaryIdx;
       while (replicas.length < rf && replicas.length < filteredNodes.length) {
