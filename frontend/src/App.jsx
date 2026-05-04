@@ -14,6 +14,7 @@ import "./index.css";
 const API = "http://127.0.0.1:8000";
 
 const TABS = [
+  { id: "cluster", label: "0. Architecture du Cluster" },
   { id: "partitionnement", label: "1. Partitionnement" },
   { id: "ring", label: "2. Token Ring" },
   { id: "replication", label: "3. Réplication" },
@@ -24,18 +25,49 @@ const TABS = [
 ];
 
 export default function App() {
-  // ── Stratégie ──────────────────────────────────────────────────────────────
-  const [strategyConfig, setStrategyConfig] = useState(null);
+  // ── Utilitaires de Cache ───────────────────────────────────────────────────
+  const clearCache = () => {
+    ["simcass_strategy", "simcass_tab", "simcass_nodes", "simcass_tokens", 
+     "simcass_allData", "simcass_selectedUser", "simcass_consistency", "simcass_downNodes"].forEach(k => localStorage.removeItem(k));
+  };
 
-  // ── Cluster ────────────────────────────────────────────────────────────────
-  const [tab, setTab] = useState("partitionnement");
-  const [nodes, setNodes] = useState([]);
-  const [nodesWithTokens, setNodesWithTokens] = useState([]);
-  const [allData, setAllData] = useState([]);
+  // ── Stratégie (Persistée) ──────────────────────────────────────────────────
+  const [strategyConfig, setStrategyConfig] = useState(() => {
+    const saved = localStorage.getItem("simcass_strategy");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  // ── Cluster & Etat Global (Persisté) ───────────────────────────────────────
+  const [tab, setTab] = useState(() => localStorage.getItem("simcass_tab") || "cluster");
+  
+  const [nodes, setNodes] = useState(() => {
+    const saved = localStorage.getItem("simcass_nodes");
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [nodesWithTokens, setNodesWithTokens] = useState(() => {
+    const saved = localStorage.getItem("simcass_tokens");
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  const [allData, setAllData] = useState(() => {
+    const saved = localStorage.getItem("simcass_allData");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [selectedUser, setSelectedUser] = useState(() => {
+    const saved = localStorage.getItem("simcass_selectedUser");
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [consistency, setConsistency] = useState(() => localStorage.getItem("simcass_consistency") || "QUORUM");
+
+  const [downNodes, setDownNodes] = useState(() => {
+    const saved = localStorage.getItem("simcass_downNodes");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
   const [backendStatus, setBackendStatus] = useState("loading");
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [consistency, setConsistency] = useState("QUORUM");
-  const [downNodes, setDownNodes] = useState(new Set());
   const [autoPlayId, setAutoPlayId] = useState(0);
 
   // ── Formulaire d'insertion ─────────────────────────────────────────────────
@@ -48,16 +80,32 @@ export default function App() {
   // ── Modaux CRUD ────────────────────────────────────────────────────────────
   const [modal, setModal] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
-  const [modalError, setModalError] = useState("");   // ✅ NOUVEAU
+  const [modalError, setModalError] = useState("");
   const [autoDeleteId, setAutoDeleteId] = useState(0);
   const [autoUpdateId, setAutoUpdateId] = useState(0);
   const [updatedUser, setUpdatedUser] = useState(null);
 
-  // ── Fermeture propre du modal (reset erreur) ───────────────────────────────
   const closeModal = () => {
     setModal(null);
-    setModalError("");  // ✅ reset l'erreur à chaque fermeture
+    setModalError("");
   };
+
+  // ── Synchro LocalStorage (Sauvegarde automatique) ──────────────────────────
+  useEffect(() => {
+    if (strategyConfig) localStorage.setItem("simcass_strategy", JSON.stringify(strategyConfig));
+  }, [strategyConfig]);
+
+  useEffect(() => { localStorage.setItem("simcass_tab", tab); }, [tab]);
+  useEffect(() => { localStorage.setItem("simcass_nodes", JSON.stringify(nodes)); }, [nodes]);
+  useEffect(() => { localStorage.setItem("simcass_tokens", JSON.stringify(nodesWithTokens)); }, [nodesWithTokens]);
+  useEffect(() => { localStorage.setItem("simcass_allData", JSON.stringify(allData)); }, [allData]);
+  useEffect(() => { localStorage.setItem("simcass_consistency", consistency); }, [consistency]);
+  useEffect(() => { localStorage.setItem("simcass_downNodes", JSON.stringify(Array.from(downNodes))); }, [downNodes]);
+
+  useEffect(() => {
+    if (selectedUser) localStorage.setItem("simcass_selectedUser", JSON.stringify(selectedUser));
+    else localStorage.removeItem("simcass_selectedUser");
+  }, [selectedUser]);
 
   // ── Polling cluster ────────────────────────────────────────────────────────
   const fetchCluster = useCallback(async () => {
@@ -69,13 +117,21 @@ export default function App() {
       ]);
       setNodes(nodesRes.data.nodes);
       setNodesWithTokens(tokensRes.data.nodes);
+      
       const newData = dataRes.data.users;
       setAllData(newData);
-      if (!selectedUser && newData.length > 0) setSelectedUser(newData[newData.length - 1]);
+      
+      // Si on n'a pas de donnée sélectionnée, on prend la dernière insérée
+      if (!selectedUser && newData.length > 0) {
+        setSelectedUser(newData[newData.length - 1]);
+      } else if (selectedUser && !newData.some(u => u.user_id === selectedUser.user_id)) {
+        // La donnée sélectionnée n'existe plus en base
+        setSelectedUser(null);
+      }
+      
       setBackendStatus("ok");
     } catch {
       setBackendStatus("error");
-      setNodes([]); setNodesWithTokens([]);
     }
   }, [selectedUser]);
 
@@ -86,7 +142,23 @@ export default function App() {
     return () => clearInterval(id);
   }, [fetchCluster, strategyConfig]);
 
-  useEffect(() => { setDownNodes(new Set()); }, [nodes.length]);
+  // ── Actions de Réinitialisation ────────────────────────────────────────────
+  const handleChangeStrategy = () => {
+    if (window.confirm("⚠️ Changer de stratégie va effacer toutes les données de la base. Voulez-vous continuer ?")) {
+      clearCache();
+      setStrategyConfig(null);
+      setSelectedUser(null);
+      setAllData([]);
+      setDownNodes(new Set());
+    }
+  };
+
+  const resetSimulation = () => {
+    if (window.confirm("🚨 Voulez-vous vraiment réinitialiser toute la simulation ? Cela videra le cache et vous ramènera à l'écran d'accueil.")) {
+      clearCache();
+      window.location.reload();
+    }
+  };
 
   // ── Filtrage des nœuds par stratégie ──────────────────────────────────────
   const filteredNodes = useMemo(() => {
@@ -220,7 +292,6 @@ export default function App() {
     if (!userId || !name) return;
     setInsertError("");
 
-    // ✅ Vérifier doublon AVANT tout
     const alreadyExists = allData.some(d => d.user_id === userId);
     if (alreadyExists) {
       setInsertError(`"${userId}" existe déjà dans la base !`);
@@ -230,7 +301,6 @@ export default function App() {
     setInsertLoading(true);
     const currentEmail = email || `${userId}@example.com`;
 
-    // ✅ Vérifier consistance (proxy sur selectedUser car token inconnu avant insertion)
     if (downNodes.size > 0 && selectedUser) {
       const check = checkConsistency(selectedUser);
       if (!check.can) {
@@ -261,7 +331,6 @@ export default function App() {
   const confirmUpdate = async ({ name: newName, email: newEmail }) => {
     setModalLoading(true);
 
-    // ✅ Vérifier consistance AVANT d'appeler le backend
     if (downNodes.size > 0) {
       const check = checkConsistency(modal.user);
       if (!check.can) {
@@ -298,13 +367,12 @@ export default function App() {
   const confirmDelete = async () => {
     setModalLoading(true);
 
-    // ✅ Vérifier consistance AVANT d'appeler le backend
     if (downNodes.size > 0) {
       const check = checkConsistency(modal.user);
       if (!check.can) {
         setModalError(`UnavailableException simulée — ${consistency} requiert ${check.needed} nœud(s), seulement ${check.up} disponible(s). La suppression est bloquée.`);
         setModalLoading(false);
-        return; // ← le backend n'est PAS appelé
+        return;
       }
     }
 
@@ -360,8 +428,8 @@ export default function App() {
           type={modal.type}
           user={modal.user}
           loading={modalLoading}
-          error={modalError}          // ✅ NOUVEAU
-          onCancel={closeModal}       // ✅ utilise closeModal pour reset l'erreur
+          error={modalError}
+          onCancel={closeModal}
           onConfirm={modal.type === "delete" ? confirmDelete : confirmUpdate}
         />
       )}
@@ -378,12 +446,19 @@ export default function App() {
             <span style={{ fontSize: 11, fontWeight: 700, color: "white", background: strategyColor, padding: "3px 10px", borderRadius: 20 }}>
               {strategyConfig.strategy === "nts" ? "🌍 NTS" : "🔵 Simple"}
             </span>
-            <button className="btn btn-outline" style={{ padding: "0.2rem 0.6rem", fontSize: 11 }} onClick={() => setStrategyConfig(null)}>
+            <button className="btn btn-outline" style={{ padding: "0.2rem 0.6rem", fontSize: 11 }} onClick={handleChangeStrategy}>
               Changer
             </button>
           </div>
 
-          <button className="btn btn-outline" style={{ padding: "0.25rem 0.75rem", fontSize: 12 }} onClick={fetchCluster}>↺ Refresh</button>
+          <div style={{ display: "flex", gap: "0.4rem" }}>
+            <button className="btn btn-outline" style={{ padding: "0.25rem 0.75rem", fontSize: 12 }} onClick={fetchCluster}>
+              ↺ Refresh
+            </button>
+            <button className="btn btn-outline" style={{ padding: "0.25rem 0.75rem", fontSize: 12, borderColor: "#fca5a5", color: "#ef4444" }} onClick={resetSimulation}>
+              ⚠️ Reset
+            </button>
+          </div>
         </div>
 
         {/* Consistency */}
@@ -448,7 +523,6 @@ export default function App() {
                           <div style={{ fontWeight: 600, color: isSelected ? "var(--primary-hover)" : "var(--text-primary)", fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.user_id}</div>
                           <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>{d.name}</div>
                         </div>
-                        {/* Boutons modifier / supprimer — reset modalError à l'ouverture */}
                         <div style={{ display: "flex", gap: "0.3rem", marginLeft: "0.5rem" }} onClick={e => e.stopPropagation()}>
                           <button title="Modifier" onClick={() => { setModalError(""); setModal({ type: "edit", user: d }); }}
                             style={{ width: 26, height: 26, borderRadius: 6, background: "none", border: "1px solid var(--border-light)", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
@@ -480,7 +554,25 @@ export default function App() {
           {/* Content */}
           <div style={{ padding: "2rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
 
-            {!selectedUser ? (
+            {tab === "cluster" && (
+              <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "3rem" }}>
+                <div style={{ width: "100%", maxWidth: 800, marginBottom: "2rem", textAlign: "center" }}>
+                  <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)" }}>Architecture Globale</h2>
+                  <p style={{ margin: 0, color: "var(--text-secondary)", lineHeight: 1.6 }}>
+                    Voici l'état actuel de votre cluster Cassandra ({strategyConfig.strategy === "nts" ? "Multi-Datacenters" : "SimpleStrategy"}).
+                  </p>
+                </div>
+                <TokenRing
+                  nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes}
+                  nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens}
+                  highlightToken={null} 
+                  downNodes={downNodes}
+                  strategy={strategyConfig.strategy}
+                />
+              </div>
+            )}
+
+            {tab !== "cluster" && !selectedUser ? (
               <div className="card" style={{ textAlign: "center", padding: "4rem 2rem", borderStyle: "dashed" }}>
                 <div style={{ fontSize: "3rem", marginBottom: "1.5rem" }}>👈</div>
                 <h2 style={{ color: "var(--text-primary)", marginBottom: "0.5rem" }}>Sélectionne une donnée</h2>
@@ -488,7 +580,7 @@ export default function App() {
                   Insère une donnée ou clique sur un enregistrement existant pour démarrer la simulation visuelle.
                 </p>
               </div>
-            ) : (
+            ) : tab !== "cluster" && selectedUser ? (
               <>
                 {/* Fil conducteur */}
                 <div className="card" style={{ background: "var(--primary-light)", borderLeft: "4px solid var(--primary-color)", padding: "0.875rem 1.5rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -555,7 +647,7 @@ export default function App() {
                     consistency={consistency} downNodes={downNodes} autoPlayId={autoUpdateId} />
                 )}
               </>
-            )}
+            ) : null}
           </div>
         </main>
       </div>

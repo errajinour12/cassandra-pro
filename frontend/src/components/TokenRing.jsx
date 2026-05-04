@@ -1,5 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+
+// ─── Constantes Murmur3 ────────────────────────────────────────────────────────
+const MIN_TOKEN = -9223372036854775808n;
+const MAX_TOKEN = 9223372036854775807n;
+const TOTAL_RING = 18446744073709551616n; // 2^64
+
+const formatToken = (tStr) => {
+  if (!tStr) return "";
+  return Number(tStr).toExponential(2);
+};
 
 // ─── Couleurs par DC ───────────────────────────────────────────────────────────
 const DC_PALETTE = {
@@ -9,6 +19,82 @@ const DC_PALETTE = {
   dc4: { ring: "#ef4444", label: "#f87171", bg: "#ef444410" },
 };
 const DC_DEFAULT = { ring: "#64748b", label: "#94a3b8", bg: "#64748b10" };
+
+// ─── Composant : Accordéon par Nœud (Custom Shadcn-like Épuré) ────────────────
+function NodeAccordion({ nodeInfo }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { node, globalIdx, ranges } = nodeInfo;
+  const nodeColor = `var(--node-${globalIdx % 5})`;
+
+  return (
+    <div style={{ border: "1px solid var(--border-light)", borderRadius: "var(--radius-md)", overflow: "hidden", background: "var(--bg-app)", boxShadow: "var(--shadow-sm)" }}>
+      {/* ── Header Accordéon ── */}
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.25rem", background: isOpen ? "var(--bg-surface)" : "var(--bg-app)", border: "none", cursor: "pointer", outline: "none", transition: "background 0.2s" }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+          <div style={{ width: 14, height: 14, borderRadius: "50%", background: nodeColor, boxShadow: `0 0 6px ${nodeColor}80` }}></div>
+          <strong style={{ color: nodeColor, fontSize: 14, fontWeight: 700 }}>Nœud {globalIdx + 1}</strong>
+          <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+            {node.address} <span style={{ opacity: 0.6 }}>(DC: {node.datacenter || "dc1"})</span>
+          </span>
+          <span className="badge badge-neutral" style={{ fontSize: 11 }}>{ranges.length} vnodes</span>
+        </div>
+        <div style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.3s ease", color: "var(--text-tertiary)" }}>
+          ▼
+        </div>
+      </button>
+
+      {/* ── Contenu (Tableau Épuré) ── */}
+      {isOpen && (
+        <div style={{ padding: "0 1.25rem 1.25rem 1.25rem", borderTop: "1px solid var(--border-light)", background: "var(--bg-surface)", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, textAlign: "left", marginTop: "1rem" }}>
+            <thead>
+              <tr style={{ borderBottom: "2px solid var(--border-light)", color: "var(--text-secondary)" }}>
+                <th style={{ padding: "0.75rem", width: "5%" }}>#</th>
+                <th style={{ padding: "0.75rem", width: "65%", textAlign: "center" }}>Plage [Début → Fin]</th>
+                <th style={{ padding: "0.75rem", width: "30%", textAlign: "right" }}>Portion (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ranges.length === 0 ? (
+                <tr><td colSpan="3" style={{ textAlign: "center", padding: "1rem", color: "var(--text-tertiary)" }}>Aucun token assigné</td></tr>
+              ) : ranges.map((r, idx) => (
+                <tr key={idx} style={{ borderBottom: "1px solid var(--border-light)50" }}>
+                  <td style={{ padding: "0.75rem", color: "var(--text-tertiary)", fontWeight: 600 }}>{idx + 1}</td>
+                  
+                  {/* Colonne Plage avec Grid pour un alignement symétrique parfait des flèches */}
+                  <td style={{ padding: "0.75rem", fontFamily: "monospace", color: "var(--text-primary)", fontSize: 13 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: "1.5rem" }}>
+                      <span title={r.startStr} style={{ borderBottom: "1px dotted #9ca3af", cursor: "help", textAlign: "right", color: "var(--text-secondary)" }}>
+                        {formatToken(r.startStr)}
+                      </span>
+                      <span style={{ color: "var(--primary-color)", fontWeight: 700, fontSize: 14 }}>→</span>
+                      <span title={r.tokenStr} style={{ borderBottom: "1px dotted #9ca3af", cursor: "help", fontWeight: 700, textAlign: "left" }}>
+                        {formatToken(r.tokenStr)}
+                      </span>
+                    </div>
+                  </td>
+                  
+                  {/* Colonne Portion (Progress bar) */}
+                  <td style={{ padding: "0.75rem", textAlign: "right" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "10px" }}>
+                      <span style={{ fontWeight: 600 }}>{r.percent}%</span>
+                      <div style={{ width: "60px", height: "6px", background: "var(--border-light)", borderRadius: 3, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${r.percent}%`, background: nodeColor }}></div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Sous-composant : un anneau SVG pour un DC ────────────────────────────────
 function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightToken, downNodes }) {
@@ -30,11 +116,9 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
       endAngle: ((i + 1) / totalNodes) * 2 * Math.PI - Math.PI / 2,
     }));
 
-    // Réordonne dcNodesWithTokens pour qu'il corresponde à dcNodes (même ordre par adresse)
     const addrToNWT = new Map((dcNodesWithTokens || []).map(n => [n.address, n]));
     const orderedNWT = dcNodes.map(n => addrToNWT.get(n.address) || { tokens: [] });
 
-    // Cherche le nœud responsable DANS CE DC uniquement — index local dans dcNodes
     const getResponsibleIdx = (tokenStr) => {
       try {
         const allTokens = [];
@@ -51,12 +135,10 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
       } catch { return 0; }
     };
 
-    // Clamp pour éviter l'accès hors-limites
     let primaryNodeIdx = highlightToken ? getResponsibleIdx(highlightToken) : 0;
     primaryNodeIdx = Math.max(0, Math.min(primaryNodeIdx, dcNodes.length - 1));
     const getNodeColor = (localIdx) => `var(--node-${(globalIndices?.[localIdx] ?? localIdx) % 5})`;
 
-    // ── Warning pannes ─────────────────────────────────────────────────────────
     const downSegs = logicalSegments.filter(seg => {
       const nd = dcNodes[seg.nodeIdx];
       return downNodes.has(nd.address) || !nd.is_up;
@@ -71,11 +153,9 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
         .text(`⚠ ${downSegs.length} nœud(s) en panne`);
     }
 
-    // ── Anneau fond ────────────────────────────────────────────────────────────
     svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", r)
       .attr("fill", "none").attr("stroke", "var(--border-light)").attr("stroke-width", 30).attr("opacity", 0.25);
 
-    // ── Segments (couleur par nœud) ────────────────────────────────────────────
     logicalSegments.forEach((seg) => {
       const x1 = cx + r * Math.cos(seg.startAngle);
       const y1 = cy + r * Math.sin(seg.startAngle);
@@ -95,14 +175,12 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
         .attr("opacity", isDown ? 0.2 : isHighlight ? 1 : 0.45)
         .style("transition", "opacity 0.3s ease");
 
-      // Ticks
       svg.append("line")
         .attr("x1", cx + (r - 16) * Math.cos(seg.startAngle)).attr("y1", cy + (r - 16) * Math.sin(seg.startAngle))
         .attr("x2", cx + (r + 16) * Math.cos(seg.startAngle)).attr("y2", cy + (r + 16) * Math.sin(seg.startAngle))
         .attr("stroke", "var(--bg-surface)").attr("stroke-width", 4).attr("stroke-linecap", "round");
     });
 
-    // ── Nœuds physiques (couleur individuelle) ─────────────────────────────────
     dcNodes.forEach((node, i) => {
       const seg = logicalSegments[i];
       const midAngle = (seg.startAngle + seg.endAngle) / 2;
@@ -116,7 +194,6 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
       const isDown = isSimDown || isRealDown;
       const nodeColor = getNodeColor(i);
 
-      // Ligne de connexion
       svg.append("line")
         .attr("x1", cx + r * Math.cos(midAngle)).attr("y1", cy + r * Math.sin(midAngle))
         .attr("x2", x).attr("y2", y)
@@ -152,7 +229,6 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
       }
     });
 
-    // ── Point de la donnée ─────────────────────────────────────────────────────
     if (highlightToken != null) {
       const seg = logicalSegments[primaryNodeIdx];
       const midAngle = (seg.startAngle + seg.endAngle) / 2;
@@ -173,7 +249,6 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
         .attr("font-family", "Inter").text("Donnée");
     }
 
-    // ── Centre ─────────────────────────────────────────────────────────────────
     svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", 50)
       .attr("fill", "var(--bg-app)").attr("stroke", palette.ring).attr("stroke-width", 1).attr("opacity", 0.6);
     svg.append("text").attr("x", cx).attr("y", cx - 7)
@@ -204,16 +279,83 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
 // ─── Composant principal ───────────────────────────────────────────────────────
 export default function TokenRing({ nodes, nodesWithTokens, highlightToken, downNodes = new Set(), strategy = "simple" }) {
 
+  // ✅ Logique avancée de calcul des plages (VNodes)
+  const renderTokenTable = () => {
+    if (!nodesWithTokens || nodesWithTokens.length === 0) return null;
+
+    const allTokens = [];
+    nodesWithTokens.forEach((node, nodeIdx) => {
+      (node.tokens || []).forEach(t => {
+        allTokens.push({ tokenVal: BigInt(t), tokenStr: t, address: node.address, dc: node.datacenter, nodeIdx });
+      });
+    });
+
+    if (allTokens.length === 0) return null;
+
+    allTokens.sort((a, b) => (a.tokenVal < b.tokenVal ? -1 : 1));
+
+    const ranges = allTokens.map((item, i) => {
+      const prevIdx = i === 0 ? allTokens.length - 1 : i - 1;
+      const prevItem = allTokens[prevIdx];
+      const start = prevItem.tokenVal;
+      const end = item.tokenVal;
+
+      let size;
+      if (start < end) {
+        size = end - start;
+      } else {
+        size = (MAX_TOKEN - start) + (end - MIN_TOKEN);
+      }
+
+      const percent = Number((size * 10000n) / TOTAL_RING) / 100;
+
+      return {
+        ...item,
+        startStr: prevItem.tokenStr,
+        percent: percent.toFixed(2)
+      };
+    });
+
+    const nodesMap = new Map();
+    nodesWithTokens.forEach((n, i) => {
+      nodesMap.set(n.address, { node: n, globalIdx: i, ranges: [] });
+    });
+    ranges.forEach(r => {
+      if (nodesMap.has(r.address)) {
+        nodesMap.get(r.address).ranges.push(r);
+      }
+    });
+
+    const nodeInfos = Array.from(nodesMap.values());
+
+    return (
+      <div style={{ marginTop: "3rem", width: "100%", maxWidth: 1000 }}>
+        <h3 style={{ margin: "0 0 1.2rem", fontSize: 15, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center" }}>
+          📊 Plages de Hachage Détaillées (VNodes)
+        </h3>
+        
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {nodeInfos.map(info => (
+            <NodeAccordion key={info.node.address} nodeInfo={info} />
+          ))}
+        </div>
+
+        <p style={{ marginTop: "1.5rem", fontSize: 13, color: "var(--text-tertiary)", lineHeight: 1.5, textAlign: "center" }}>
+          <em>* Astuce : Survolez un token pour afficher sa valeur Murmur3 complète.<br/>
+          La « Portion » représente le pourcentage exact de l'anneau de hachage global couvert par cette plage.</em>
+        </p>
+      </div>
+    );
+  };
+
   // ── Mode NTS : un anneau par DC ─────────────────────────────────────────────
   if (strategy === "nts") {
     const dcs = [...new Set(nodes.map(n => n.datacenter))].sort();
 
     return (
-      <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "2rem" }}>
-        {/* Anneaux par DC */}
+      <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "2rem" }}>
         <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "center" }}>
           {dcs.map(dc => {
-            // Préserve l'index global de chaque nœud
             const dcNodeEntries = nodes
               .map((n, globalIdx) => ({ n, globalIdx }))
               .filter(({ n }) => n.datacenter === dc);
@@ -235,7 +377,6 @@ export default function TokenRing({ nodes, nodesWithTokens, highlightToken, down
           })}
         </div>
 
-        {/* Légende NTS */}
         <div style={{ maxWidth: 500, margin: "0 auto", background: "var(--bg-app)", padding: "1.2rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-light)" }}>
           <h4 style={{ margin: "0 0 0.8rem", color: "var(--text-primary)", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.5px" }}>
             🌍 NetworkTopologyStrategy — Multi-DC
@@ -255,12 +396,19 @@ export default function TokenRing({ nodes, nodesWithTokens, highlightToken, down
             </li>
           </ul>
         </div>
+        
+        {renderTokenTable()}
       </div>
     );
   }
 
   // ── Mode SimpleStrategy : anneau unique (comportement originel) ──────────────
-  return <SingleRing nodes={nodes} nodesWithTokens={nodesWithTokens} highlightToken={highlightToken} downNodes={downNodes} />;
+  return (
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "2rem" }}>
+      <SingleRing nodes={nodes} nodesWithTokens={nodesWithTokens} highlightToken={highlightToken} downNodes={downNodes} />
+      {renderTokenTable()}
+    </div>
+  );
 }
 
 // ─── Anneau simple (SimpleStrategy) ──────────────────────────────────────────
