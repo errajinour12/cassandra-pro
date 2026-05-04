@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function WritePath({ selectedUser, nodes, nodesWithTokens, rf, consistency, autoPlayId, downNodes = new Set() }) {
+export default function DeletePath({ selectedUser, nodes, nodesWithTokens, rf, consistency, autoPlayId, downNodes = new Set() }) {
   const [step, setStep] = useState(0);
   const [isSuccess, setIsSuccess] = useState(true);
 
@@ -177,32 +177,32 @@ export default function WritePath({ selectedUser, nodes, nodesWithTokens, rf, co
       
       {/* Colonne Gauche : Narratif et Explications */}
       <div className="card" style={{ display: "flex", flexDirection: "column", background: "var(--bg-sidebar)", borderRight: "1px solid var(--border-light)" }}>
-        <h2 style={{ margin: "0 0 1rem", color: "var(--text-primary)", fontSize: "1.4rem" }}>L'Anatomie d'une Écriture</h2>
+        <h2 style={{ margin: "0 0 1rem", color: "var(--text-primary)", fontSize: "1.4rem" }}>L'Anatomie d'une Suppression</h2>
         <p style={{ margin: "0 0 2rem", color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.6 }}>
-          Découvrez comment Cassandra combine <strong>Partitionnement</strong>, <strong>Réplication</strong> et <strong>Consistance</strong> pour stocker la donnée <span style={{color: "var(--primary-color)", fontWeight: "bold"}}>{selectedUser?.user_id}</span>.
+          Découvrez comment Cassandra gère la <strong>Suppression (Tombstone)</strong>, la <strong>Réplication</strong> et la <strong>Consistance</strong> pour la donnée <span style={{color: "var(--error-color)", fontWeight: "bold"}}>{selectedUser?.user_id}</span>.
         </p>
 
-        <button className="btn btn-primary" onClick={playAnimation} style={{ padding: "1rem", fontSize: "15px", marginBottom: "2rem", width: "100%" }}>
+        <button className="btn btn-primary" onClick={playAnimation} style={{ padding: "1rem", fontSize: "15px", marginBottom: "2rem", width: "100%", background: "var(--error-color)", borderColor: "var(--error-color)" }}>
           ▶ Lancer l'Animation Complète
         </button>
 
         {/* Panneau d'explication dynamique */}
         <div style={{ 
           flex: 1, 
-          background: step > 0 ? "var(--primary-light)" : "var(--bg-surface)", 
-          border: step > 0 ? "1px solid var(--primary-color)" : "1px solid var(--border-light)",
+          background: step > 0 ? "var(--error-bg)" : "var(--bg-surface)", 
+          border: step > 0 ? "1px solid var(--error-color)" : "1px solid var(--border-light)",
           borderRadius: "var(--radius-lg)", 
           padding: "1.5rem",
           transition: "all 0.3s ease",
-          boxShadow: step > 0 ? "0 4px 12px rgba(59, 130, 246, 0.15)" : "none"
+          boxShadow: step > 0 ? "0 4px 12px rgba(239, 68, 68, 0.15)" : "none"
         }}>
           {stepDescriptions[step].module && (
-            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--primary-color)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "var(--error-color)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 }}>
               Concept : {stepDescriptions[step].module}
             </div>
           )}
-          <h3 style={{ margin: "0 0 1rem", color: "var(--primary-hover)", fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ background: "var(--primary-color)", color: "white", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: "12px" }}>
+          <h3 style={{ margin: "0 0 1rem", color: "#dc2626", fontSize: "1.2rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ background: "var(--error-color)", color: "white", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", fontSize: "12px" }}>
               {step}
             </span>
             {stepDescriptions[step].title}
@@ -286,8 +286,8 @@ export default function WritePath({ selectedUser, nodes, nodesWithTokens, rf, co
                 {/* Moteur interne (Memtable/CommitLog) visible à l'étape 3 */}
                 {!isDown && (
                   <div className={`internal-engine ${step >= 3 ? 'show-engine' : ''}`}>
-                    <div className={`engine-part ${isWriting ? 'flash-write' : ''}`}>💽 CommitLog</div>
-                    <div className={`engine-part ${isWriting ? 'flash-write' : ''}`}>🧠 Memtable : {selectedUser?.user_id} ✓</div>
+                    <div className={`engine-part ${isWriting ? 'flash-write' : ''}`} style={{ borderColor: step >=3 ? '#fca5a5' : '', background: step >=3 ? '#fef2f2' : '', color: step >=3 ? '#dc2626' : '' }}>💽 CommitLog : 💀 Tombstone</div>
+                    <div className={`engine-part ${isWriting ? 'flash-write' : ''}`} style={{ borderColor: step >=3 ? '#fca5a5' : '', background: step >=3 ? '#fef2f2' : '', color: step >=3 ? '#dc2626' : '' }}>🧠 Memtable : 💀 Tombstone</div>
                   </div>
                 )}
 

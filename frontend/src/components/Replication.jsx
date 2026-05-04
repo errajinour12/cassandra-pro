@@ -1,132 +1,210 @@
-export default function Replication({ nodes, nodesWithTokens, selectedUser, rf, strategy }) {
-  const totalNodes = nodes.length;
+const DC_COLORS = {
+  dc1: { primary: "#4f46e5", bg: "#4f46e510", border: "#4f46e540", text: "#818cf8" },
+  dc2: { primary: "#10b981", bg: "#10b98110", border: "#10b98140", text: "#34d399" },
+};
 
-  let primaryNodeIdx = 0;
-  if (selectedUser && nodesWithTokens.length > 0) {
-    const allTokens = [];
-    nodesWithTokens.forEach((node, nodeIdx) => {
-      (node.tokens || []).forEach(tok => {
-        allTokens.push({ token: tok, nodeIdx });
-      });
-    });
-    allTokens.sort((a, b) => {
-      const ta = BigInt(a.token), tb = BigInt(b.token);
-      return ta < tb ? -1 : ta > tb ? 1 : 0;
-    });
+function getDcColor(dc) {
+  return DC_COLORS[dc] || DC_COLORS.dc1;
+}
 
-    const ht = BigInt(selectedUser.token);
-    for (let i = 0; i < allTokens.length; i++) {
-      if (ht <= BigInt(allTokens[i].token)) {
-        primaryNodeIdx = allTokens[i].nodeIdx;
-        break;
-      }
-    }
-    if (primaryNodeIdx === 0 && allTokens.length > 0 && ht > BigInt(allTokens[allTokens.length - 1].token)) {
-      primaryNodeIdx = allTokens[0].nodeIdx;
-    }
+/** Calcule le nœud primaire et les replicas à partir des tokens — pour SimpleStrategy (global) */
+function computeReplicas(nodesWithTokens, selectedUser, rf, nodes) {
+  if (!selectedUser || nodesWithTokens.length === 0) return { primaryNodeIdx: 0, replicaIdxs: [] };
+  const allTokens = [];
+  nodesWithTokens.forEach((node, nodeIdx) => {
+    (node.tokens || []).forEach(tok => allTokens.push({ token: tok, nodeIdx }));
+  });
+  allTokens.sort((a, b) => (BigInt(a.token) < BigInt(b.token) ? -1 : 1));
+
+  const ht = BigInt(selectedUser.token);
+  let primaryIdx = 0;
+  for (let i = 0; i < allTokens.length; i++) {
+    if (ht <= BigInt(allTokens[i].token)) { primaryIdx = allTokens[i].nodeIdx; break; }
+  }
+  if (primaryIdx === 0 && allTokens.length > 0 && ht > BigInt(allTokens[allTokens.length - 1].token)) {
+    primaryIdx = allTokens[0].nodeIdx;
   }
 
-  const actualRf = Math.min(rf, totalNodes || 1);
+  const actualRf = Math.min(rf, nodes.length || 1);
   const replicaIdxs = [];
-  if (strategy === "simple" && totalNodes > 1) {
-    for (let i = 1; i < actualRf; i++) {
-      replicaIdxs.push((primaryNodeIdx + i) % totalNodes);
-    }
+  for (let i = 1; i < actualRf; i++) {
+    replicaIdxs.push((primaryIdx + i) % (nodes.length || 1));
   }
+  return { primaryNodeIdx: primaryIdx, replicaIdxs };
+}
+
+/** Calcule les répliques pour UN DC (NTS) — renvoie { primaryLocalIdx, replicaLocalIdxs } */
+function computeDcReplicas(dcNodesWithTokens, selectedUser, dcRf, dcNodeCount) {
+  if (!selectedUser || !dcNodesWithTokens.length) return { primaryLocalIdx: 0, replicaLocalIdxs: [] };
+  const allTokens = [];
+  dcNodesWithTokens.forEach((node, localIdx) => {
+    (node.tokens || []).forEach(tok => allTokens.push({ token: tok, localIdx }));
+  });
+  allTokens.sort((a, b) => (BigInt(a.token) < BigInt(b.token) ? -1 : 1));
+
+  const ht = BigInt(selectedUser.token);
+  let primaryLocalIdx = 0;
+  for (let i = 0; i < allTokens.length; i++) {
+    if (ht <= BigInt(allTokens[i].token)) { primaryLocalIdx = allTokens[i].localIdx; break; }
+  }
+  if (primaryLocalIdx === 0 && allTokens.length > 0 && ht > BigInt(allTokens[allTokens.length - 1].token)) {
+    primaryLocalIdx = allTokens[0].localIdx;
+  }
+
+  const actualRf = Math.min(dcRf, dcNodeCount || 1);
+  const replicaLocalIdxs = [];
+  for (let i = 1; i < actualRf; i++) {
+    replicaLocalIdxs.push((primaryLocalIdx + i) % (dcNodeCount || 1));
+  }
+  return { primaryLocalIdx, replicaLocalIdxs };
+}
+
+// ── Composant nœud ────────────────────────────────────────────────────────────
+function NodeCard({ n, i, isPrimary, isReplica, isDown, isSimDown, isReallyDown, nodeColor, selectedUser }) {
+  const hasData = isPrimary || isReplica;
+  return (
+    <div className="card node-card" style={{
+      width: 140, padding: "1.25rem 0.75rem", textAlign: "center",
+      "--node-color": nodeColor,
+      background: isDown ? "var(--error-bg)" : "var(--bg-surface)",
+      borderColor: isDown ? "var(--error-color)" : hasData ? nodeColor : "var(--border-light)",
+      boxShadow: hasData && !isDown ? `0 6px 20px ${nodeColor}30` : "var(--shadow-sm)",
+      opacity: isDown ? 0.7 : 1,
+      transform: hasData && !isDown ? "translateY(-4px)" : "none",
+      transition: "all 0.2s ease",
+    }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.5rem" }}>
+        <div style={{ width: 44, height: 44, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 14, background: hasData && !isDown ? `${nodeColor}18` : "var(--bg-app)", color: hasData && !isDown ? nodeColor : isDown ? "var(--error-color)" : "var(--text-tertiary)", border: `2px solid ${hasData && !isDown ? nodeColor : isDown ? "var(--error-color)" : "var(--border-light)"}` }}>
+          N{i + 1}
+        </div>
+      </div>
+      <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "monospace", marginBottom: "0.75rem", overflow: "hidden", textOverflow: "ellipsis" }}>{n.address}</div>
+      {isReallyDown ? <span className="badge badge-error">PANNE RÉELLE</span>
+        : isSimDown ? <span className="badge badge-error">PANNE SIMULÉE</span>
+        : hasData ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", alignItems: "center" }}>
+            <span className="badge" style={{ background: isPrimary ? nodeColor : "var(--bg-surface)", color: isPrimary ? "white" : nodeColor, border: `1px solid ${nodeColor}` }}>
+              {isPrimary ? "⭐ PRIMAIRE" : "🔄 RÉPLIQUE"}
+            </span>
+            <div style={{ fontSize: 10, color: "var(--text-secondary)", background: "var(--bg-app)", padding: "2px 6px", borderRadius: 4 }}>
+              {selectedUser?.user_id}
+            </div>
+          </div>
+        ) : (
+          <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Vide pour cette clé</div>
+        )}
+    </div>
+  );
+}
+
+export default function Replication({ nodes, nodesWithTokens, selectedUser, rf, rfPerDc, strategy, downNodes = new Set() }) {
+  const isNts = strategy === "nts";
+  const { primaryNodeIdx, replicaIdxs } = computeReplicas(nodesWithTokens, selectedUser, rf, nodes);
+  const actualRf = Math.min(rf, nodes.length || 1);
+
+  // Regrouper les nœuds par datacenter pour NTS
+  const byDc = {};
+  nodes.forEach((n, i) => {
+    const dc = n.datacenter || "dc1";
+    if (!byDc[dc]) byDc[dc] = [];
+    byDc[dc].push({ n, i });
+  });
+
+  const renderNodeCard = ({ n, i }) => {
+    const isPrimary = i === primaryNodeIdx;
+    const isReplica = replicaIdxs.includes(i);
+    const isSimDown = downNodes.has(n.address);
+    const isReallyDown = !n.is_up;
+    const isDown = isSimDown || isReallyDown;
+    const nodeColor = `var(--node-${i % 5})`;
+    return (
+      <NodeCard key={i} n={n} i={i} isPrimary={isPrimary} isReplica={isReplica}
+        isDown={isDown} isSimDown={isSimDown} isReallyDown={isReallyDown}
+        nodeColor={nodeColor} selectedUser={selectedUser} />
+    );
+  };
 
   return (
     <div>
       <div className="card" style={{ marginBottom: "2rem" }}>
         <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)", fontSize: "1.5rem" }}>Réplication</h2>
-        <p style={{ margin: "0 0 1.5rem", color: "var(--text-secondary)", fontSize: "15px", lineHeight: 1.6 }}>
-          Le <strong>Replication Factor (RF)</strong> détermine combien de copies de la donnée existent dans le cluster. 
-          Actuellement fixé à <strong>{rf}</strong> pour la clé <strong style={{ color: "var(--primary-color)" }}>{selectedUser.user_id}</strong>.
-          En SimpleStrategy, Cassandra trouve d'abord le nœud primaire, puis place les copies sur les nœuds physiquement suivants sur l'anneau.
+        <p style={{ margin: "0 0 1.5rem", color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.6 }}>
+          {isNts
+            ? <>En <strong>NetworkTopologyStrategy</strong>, chaque datacenter a son propre Replication Factor. Les réplicas restent dans leur DC respectif, assurant la <strong>tolérance géographique</strong>.</>
+            : <>En <strong>SimpleStrategy</strong>, Cassandra place les réplicas sur les nœuds consécutifs de l'anneau. RF actuel : <strong>{rf}</strong> pour <strong style={{ color: "var(--primary-color)" }}>{selectedUser.user_id}</strong>.</>
+          }
         </p>
 
-        {strategy !== "simple" && (
-          <div style={{ padding: "1rem 1.5rem", background: "var(--warning-bg)", borderLeft: "4px solid var(--warning-color)", borderRadius: "var(--radius-md)", color: "#92400e", marginBottom: "1.5rem", fontSize: 14 }}>
-            La simulation visuelle est actuellement optimisée pour <strong>SimpleStrategy</strong>. NetworkTopologyStrategy n'est pas illustré ici.
+        {downNodes.size > 0 && (
+          <div style={{ padding: "0.75rem 1rem", background: "var(--warning-bg)", borderLeft: "4px solid var(--warning-color)", borderRadius: "var(--radius-md)", color: "#92400e", marginBottom: "1.5rem", fontSize: 13 }}>
+            ⚠️ <strong>{downNodes.size} panne(s) simulée(s)</strong> reflétées ici.
           </div>
         )}
 
-        {totalNodes > 0 ? (
-          <div>
-            <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "2.5rem" }}>
-              {nodes.map((n, i) => {
-                const isPrimary = i === primaryNodeIdx;
-                const isReplica = replicaIdxs.includes(i);
-                const hasData = isPrimary || isReplica;
-                const nodeColor = `var(--node-${i % 5})`;
+        {nodes.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-tertiary)" }}>En attente des nœuds...</div>
+        ) : isNts ? (
+          /* ── Vue NTS : un groupe par DC avec répliques calculées par DC ── */
+          <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "2rem" }}>
+            {Object.entries(byDc).map(([dc, dcNodes]) => {
+              const colors = getDcColor(dc);
+              const dcRf = rfPerDc?.[dc] ?? 1;
+              // Calcul des répliques spécifique à ce DC
+              const dcAddresses = new Set(dcNodes.map(({ n }) => n.address));
+              const dcNWT = nodesWithTokens.filter(n => dcAddresses.has(n.address));
+              const { primaryLocalIdx, replicaLocalIdxs } = computeDcReplicas(dcNWT, selectedUser, dcRf, dcNodes.length);
 
-                return (
-                  <div key={i} className="card node-card" style={{
-                    width: 160, padding: "1.5rem 1rem", textAlign: "center",
-                    '--node-color': nodeColor,
-                    background: !n.is_up ? "var(--bg-app)" : "var(--bg-surface)",
-                    borderColor: !n.is_up ? "var(--border-light)" : hasData ? nodeColor : "var(--border-light)",
-                    boxShadow: hasData && n.is_up ? "0 8px 16px -4px rgba(0,0,0,0.1)" : "var(--shadow-sm)",
-                    opacity: n.is_up ? 1 : 0.6,
-                    transform: hasData && n.is_up ? "translateY(-4px)" : "none"
-                  }}>
-                    <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.5rem" }}>
-                      <div style={{ width: 48, height: 48, borderRadius: "50%", background: hasData && n.is_up ? `${nodeColor}15` : "var(--bg-app)", display: "flex", alignItems: "center", justifyContent: "center", color: hasData && n.is_up ? nodeColor : "var(--text-tertiary)", fontSize: 20, fontWeight: "bold", border: `2px solid ${hasData && n.is_up ? nodeColor : "var(--border-light)"}` }}>
-                        N{i+1}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--text-secondary)", fontFamily: "monospace", marginBottom: "1rem" }}>{n.address}</div>
-                    
-                    {hasData && n.is_up && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "center" }}>
-                        <span className="badge" style={{ 
-                          background: isPrimary ? nodeColor : "var(--bg-surface)", 
-                          color: isPrimary ? "white" : nodeColor,
-                          border: `1px solid ${nodeColor}`
-                        }}>
-                          {isPrimary ? "⭐ PRIMAIRE" : "🔄 RÉPLIQUE"}
-                        </span>
-                        <div style={{ fontSize: 11, color: "var(--text-secondary)", background: "var(--bg-app)", padding: "4px 8px", borderRadius: "4px", width: "100%" }}>
-                          Contient {selectedUser.user_id}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {!hasData && n.is_up && (
-                      <div style={{ marginTop: "1.5rem", fontSize: 12, color: "var(--text-tertiary)" }}>
-                        Vide pour cette clé
-                      </div>
-                    )}
-
-                    {!n.is_up && (
-                      <div style={{ marginTop: "1.5rem", display: "flex", justifyContent: "center" }}>
-                        <span className="badge badge-error">DOWN</span>
-                      </div>
-                    )}
+              return (
+                <div key={dc} style={{ flex: 1, minWidth: 260, background: colors.bg, border: `1.5px solid ${colors.border}`, borderRadius: 16, padding: "1.25rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: colors.primary }}>🏢 {dc.toUpperCase()}</span>
+                    <span style={{ fontSize: 12, color: colors.text, background: `${colors.primary}18`, padding: "2px 10px", borderRadius: 20, border: `1px solid ${colors.border}` }}>
+                      RF = {dcRf}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-
-            <div style={{ background: "var(--primary-light)", borderRadius: "var(--radius-lg)", padding: "1.5rem", border: "1px solid rgba(59, 130, 246, 0.2)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--primary-hover)", fontWeight: 600 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                Résumé de la distribution
-              </div>
-              <div style={{ color: "var(--text-primary)", fontSize: 14, lineHeight: 1.6 }}>
-                La donnée <strong>{selectedUser.user_id}</strong> est stockée sur <strong>{actualRf} nœud(s)</strong> au total : le Nœud {primaryNodeIdx + 1} agit en tant que Primaire, accompagné de {actualRf - 1} réplique(s).
-                {rf > totalNodes && (
-                  <div style={{ marginTop: "0.5rem", color: "var(--error-color)", background: "white", padding: "0.5rem 1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--error-bg)", display: "inline-block" }}>
-                    ⚠️ Attention : Ton RF ({rf}) est supérieur au nombre de nœuds ({totalNodes}). Cassandra ne peut faire que {totalNodes} copies physiques.
+                  <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "center" }}>
+                    {dcNodes.map(({ n, i: globalI }, localI) => {
+                      const isPrimary = localI === primaryLocalIdx;
+                      const isReplica = replicaLocalIdxs.includes(localI);
+                      const isSimDown = downNodes.has(n.address);
+                      const isReallyDown = !n.is_up;
+                      const isDown = isSimDown || isReallyDown;
+                      const nodeColor = `var(--node-${globalI % 5})`;
+                      return (
+                        <NodeCard key={globalI} n={n} i={globalI} isPrimary={isPrimary} isReplica={isReplica}
+                          isDown={isDown} isSimDown={isSimDown} isReallyDown={isReallyDown}
+                          nodeColor={nodeColor} selectedUser={selectedUser} />
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
-          <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-tertiary)" }}>
-            En attente des nœuds du cluster...
+          /* ── Vue SimpleStrategy : liste plate ── */
+          <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "2rem" }}>
+            {nodes.map((n, i) => renderNodeCard({ n, i }))}
           </div>
         )}
+
+        {/* Résumé */}
+        <div style={{ background: "var(--primary-light)", borderRadius: "var(--radius-lg)", padding: "1.25rem", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
+          <div style={{ fontWeight: 600, color: "var(--primary-hover)", marginBottom: 6, fontSize: 14 }}>📊 Résumé de la distribution</div>
+          <div style={{ color: "var(--text-primary)", fontSize: 14, lineHeight: 1.6 }}>
+            {isNts ? (
+              <>La donnée <strong>{selectedUser.user_id}</strong> est répliquée dans chaque datacenter selon son RF propre.
+                {Object.entries(rfPerDc || {}).map(([dc, r]) => (
+                  <span key={dc}> — <strong style={{ color: getDcColor(dc).primary }}>{dc.toUpperCase()}</strong> : {r} copie(s)</span>
+                ))}.
+              </>
+            ) : (
+              <>La donnée <strong>{selectedUser.user_id}</strong> est stockée sur <strong>{actualRf} nœud(s)</strong> : le Nœud {primaryNodeIdx + 1} (Primaire) + {actualRf - 1} réplique(s).
+                {rf > nodes.length && <span style={{ color: "var(--error-color)", display: "block", marginTop: 4 }}>⚠️ RF ({rf}) &gt; nombre de nœuds ({nodes.length}). Cassandra ne peut faire que {nodes.length} copies.</span>}
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

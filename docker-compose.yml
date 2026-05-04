@@ -4,7 +4,10 @@ services:
     container_name: cass-node1
     environment:
       - CASSANDRA_CLUSTER_NAME=SimCluster
-      - CASSANDRA_SEEDS=cass-node1
+      - CASSANDRA_SEEDS=cass-node1,cass-node4
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - HEAP_NEWSIZE=128M
       - MAX_HEAP_SIZE=512M
     ports:
@@ -16,14 +19,17 @@ services:
       interval: 30s
       timeout: 10s
       retries: 15
-      start_period: 60s
+      start_period: 90s
 
   cassandra-node2:
     image: cassandra:4.1
     container_name: cass-node2
     environment:
       - CASSANDRA_CLUSTER_NAME=SimCluster
-      - CASSANDRA_SEEDS=cass-node1
+      - CASSANDRA_SEEDS=cass-node1,cass-node4
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - HEAP_NEWSIZE=128M
       - MAX_HEAP_SIZE=512M
     networks:
@@ -43,13 +49,85 @@ services:
     container_name: cass-node3
     environment:
       - CASSANDRA_CLUSTER_NAME=SimCluster
-      - CASSANDRA_SEEDS=cass-node1
+      - CASSANDRA_SEEDS=cass-node1,cass-node4
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
       - HEAP_NEWSIZE=128M
       - MAX_HEAP_SIZE=512M
     networks:
       - cassandra-net
     depends_on:
       cassandra-node2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  cassandra-node4:
+    image: cassandra:4.1
+    container_name: cass-node4
+    environment:
+      - CASSANDRA_CLUSTER_NAME=SimCluster
+      - CASSANDRA_SEEDS=cass-node1,cass-node4
+      - CASSANDRA_DC=dc2
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=512M
+    networks:
+      - cassandra-net
+    depends_on:
+      cassandra-node3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  cassandra-node5:
+    image: cassandra:4.1
+    container_name: cass-node5
+    environment:
+      - CASSANDRA_CLUSTER_NAME=SimCluster
+      - CASSANDRA_SEEDS=cass-node1,cass-node4
+      - CASSANDRA_DC=dc2
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=512M
+    networks:
+      - cassandra-net
+    depends_on:
+      cassandra-node4:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'describe keyspaces' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 60s
+
+  cassandra-node6:
+    image: cassandra:4.1
+    container_name: cass-node6
+    environment:
+      - CASSANDRA_CLUSTER_NAME=SimCluster
+      - CASSANDRA_SEEDS=cass-node1,cass-node4
+      - CASSANDRA_DC=dc2
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - HEAP_NEWSIZE=128M
+      - MAX_HEAP_SIZE=512M
+    networks:
+      - cassandra-net
+    depends_on:
+      cassandra-node5:
         condition: service_healthy
 
 networks:
