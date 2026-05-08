@@ -1,3 +1,5 @@
+import { Star, RefreshCw, AlertTriangle, Building2 } from "lucide-react";
+
 const DC_COLORS = {
   dc1: { primary: "#4f46e5", bg: "#4f46e510", border: "#4f46e540", text: "#818cf8" },
   dc2: { primary: "#10b981", bg: "#10b98110", border: "#10b98140", text: "#34d399" },
@@ -84,7 +86,7 @@ function NodeCard({ n, i, isPrimary, isReplica, isDown, isSimDown, isReallyDown,
         : hasData ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", alignItems: "center" }}>
             <span className="badge" style={{ background: isPrimary ? nodeColor : "var(--bg-surface)", color: isPrimary ? "white" : nodeColor, border: `1px solid ${nodeColor}` }}>
-              {isPrimary ? "⭐ PRIMAIRE" : "🔄 RÉPLIQUE"}
+              {isPrimary ? <><Star size={12} style={{marginRight:4}}/> PRIMAIRE</> : <><RefreshCw size={12} style={{marginRight:4}}/> RÉPLIQUE</>}
             </span>
             <div style={{ fontSize: 10, color: "var(--text-secondary)", background: "var(--bg-app)", padding: "2px 6px", borderRadius: 4 }}>
               {selectedUser?.user_id}
@@ -137,7 +139,7 @@ export default function Replication({ nodes, nodesWithTokens, selectedUser, rf, 
 
         {downNodes.size > 0 && (
           <div style={{ padding: "0.75rem 1rem", background: "var(--warning-bg)", borderLeft: "4px solid var(--warning-color)", borderRadius: "var(--radius-md)", color: "#92400e", marginBottom: "1.5rem", fontSize: 13 }}>
-            ⚠️ <strong>{downNodes.size} panne(s) simulée(s)</strong> reflétées ici.
+            <AlertTriangle size={14} style={{marginRight:4}}/> <strong>{downNodes.size} panne(s) simulée(s)</strong> reflétées ici.
           </div>
         )}
 
@@ -157,7 +159,7 @@ export default function Replication({ nodes, nodesWithTokens, selectedUser, rf, 
               return (
                 <div key={dc} style={{ flex: 1, minWidth: 260, background: colors.bg, border: `1.5px solid ${colors.border}`, borderRadius: 16, padding: "1.25rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                    <span style={{ fontWeight: 700, fontSize: 15, color: colors.primary }}>🏢 {dc.toUpperCase()}</span>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: colors.primary }}><><Building2 size={16} style={{marginRight:4}}/> {dc.toUpperCase()}</></span>
                     <span style={{ fontSize: 12, color: colors.text, background: `${colors.primary}18`, padding: "2px 10px", borderRadius: 20, border: `1px solid ${colors.border}` }}>
                       RF = {dcRf}
                     </span>
@@ -200,7 +202,7 @@ export default function Replication({ nodes, nodesWithTokens, selectedUser, rf, 
               </>
             ) : (
               <>La donnée <strong>{selectedUser.user_id}</strong> est stockée sur <strong>{actualRf} nœud(s)</strong> : le Nœud {primaryNodeIdx + 1} (Primaire) + {actualRf - 1} réplique(s).
-                {rf > nodes.length && <span style={{ color: "var(--error-color)", display: "block", marginTop: 4 }}>⚠️ RF ({rf}) &gt; nombre de nœuds ({nodes.length}). Cassandra ne peut faire que {nodes.length} copies.</span>}
+                {rf > nodes.length && <span style={{ color: "var(--error-color)", display: "block", marginTop: 4 }}><AlertTriangle size={14} style={{marginRight:4}}/> RF ({rf}) &gt; nombre de nœuds ({nodes.length}). Cassandra ne peut faire que {nodes.length} copies.</span>}
               </>
             )}
           </div>

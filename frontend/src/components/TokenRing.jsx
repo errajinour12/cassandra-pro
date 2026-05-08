@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Database, BarChart2, MapPin, Zap, CircleDashed, Globe } from "lucide-react";
 import * as d3 from "d3";
 
 // ─── Constantes Murmur3 ────────────────────────────────────────────────────────
@@ -268,8 +269,8 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
       background: palette.bg, border: `1.5px solid ${palette.ring}40`,
       borderRadius: 16, padding: "1.25rem 1rem 1rem"
     }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: palette.label, textTransform: "uppercase", letterSpacing: 1 }}>
-        🗄 {dcName.toUpperCase()}
+      <div style={{ fontSize: 12, fontWeight: 700, color: palette.label, textTransform: "uppercase", letterSpacing: 1, display: "flex", alignItems: "center", gap: "0.3rem" }}>
+        <Database size={14} /> {dcName.toUpperCase()}
       </div>
       <svg ref={svgRef} width={SIZE} height={SIZE} style={{ overflow: "visible" }} />
     </div>
@@ -330,8 +331,8 @@ export default function TokenRing({ nodes, nodesWithTokens, highlightToken, down
 
     return (
       <div style={{ marginTop: "3rem", width: "100%", maxWidth: 1000 }}>
-        <h3 style={{ margin: "0 0 1.2rem", fontSize: 15, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center" }}>
-          📊 Plages de Hachage Détaillées (VNodes)
+        <h3 style={{ margin: "0 0 1.2rem", fontSize: 15, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}>
+          <BarChart2 size={18} /> Plages de Hachage Détaillées (VNodes)
         </h3>
         
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -379,19 +380,19 @@ export default function TokenRing({ nodes, nodesWithTokens, highlightToken, down
 
         <div style={{ maxWidth: 500, margin: "0 auto", background: "var(--bg-app)", padding: "1.2rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-light)" }}>
           <h4 style={{ margin: "0 0 0.8rem", color: "var(--text-primary)", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            🌍 NetworkTopologyStrategy — Multi-DC
+            <><Globe size={14} style={{marginRight:4}}/> NetworkTopologyStrategy</> — Multi-DC
           </h4>
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.7rem", fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-              <span style={{ fontSize: 16 }}>🗄</span>
+              <Database size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
               <span>Chaque data center possède <strong>son propre anneau de hachage</strong>, indépendant des autres DC.</span>
             </li>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-              <span style={{ fontSize: 16 }}>📍</span>
+              <MapPin size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
               <span>Le point indique où la donnée atterrit <strong>dans chaque DC</strong>. Le nœud marqué <em>PRIMAIRE</em> en est responsable localement.</span>
             </li>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-              <span style={{ fontSize: 16 }}>⚡</span>
+              <Zap size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
               <span>La réplication inter-DC se fait via le réseau WAN — chaque DC reçoit sa propre copie.</span>
             </li>
           </ul>
@@ -570,11 +571,11 @@ function SingleRing({ nodes, nodesWithTokens, highlightToken, downNodes }) {
         <h4 style={{ margin: "0 0 0.8rem", color: "var(--text-primary)", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.5px" }}>L'anneau de hachage</h4>
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.8rem", fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
           <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-            <span style={{ color: "var(--primary-color)", fontSize: 16 }}>⭕</span>
+            <CircleDashed size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
             <span>Pour plus de clarté, l'anneau est divisé en <strong>{nodes.length} parts égales</strong> (une par nœud physique).</span>
           </li>
           <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-            <span style={{ color: "var(--primary-color)", fontSize: 16 }}>📍</span>
+            <MapPin size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
             <span>Le point indique l'emplacement de ta donnée. Elle tombe naturellement dans la portion gérée par son <strong>Nœud Primaire</strong>.</span>
           </li>
         </ul>

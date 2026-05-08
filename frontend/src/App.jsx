@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import axios from "axios";
+import { Database, PlusCircle, Trash2, Edit2, LayoutGrid, PieChart, CircleDashed, Copy, ShieldAlert, ArrowLeftRight, Server, RotateCcw, AlertTriangle, Globe } from "lucide-react";
 import TokenRing from "./components/TokenRing";
 import Replication from "./components/Replication";
 import FailureSimulator from "./components/FailureSimulator";
@@ -9,75 +10,81 @@ import DeletePath from "./components/DeletePath";
 import UpdatePath from "./components/UpdatePath";
 import StrategySelector from "./components/StrategySelector";
 import OperationModal from "./components/OperationModal";
+import PageHeader from "./components/PageHeader";
+import Architecture from "./components/Architecture";
 import "./index.css";
 
-const API = "http://127.0.0.1:8000";
+const API = "http://localhost:8000";
 
 const TABS = [
-  { id: "cluster", label: "0. Architecture du Cluster" },
-  { id: "partitionnement", label: "1. Partitionnement" },
-  { id: "ring", label: "2. Token Ring" },
-  { id: "replication", label: "3. Réplication" },
-  { id: "failure", label: "4. Pannes & Quorum" },
-  { id: "writepath", label: "5. Écriture" },
-  { id: "deletepath", label: "6. Suppression 💀" },
-  { id: "updatepath", label: "7. Modification ✏️" },
+  { id: "cluster", label: "Architecture", icon: <LayoutGrid size={18} /> },
+  { id: "partitionnement", label: "Partitionnement", icon: <PieChart size={18} /> },
+  { id: "ring", label: "Token Ring", icon: <CircleDashed size={18} /> },
+  { id: "replication", label: "Réplication", icon: <Copy size={18} /> },
+  { id: "writepath", label: "Flux d'Écriture", icon: <ArrowLeftRight size={18} /> },
+  { id: "updatepath", label: "Mise à Jour", icon: <Edit2 size={18} /> },
+  { id: "deletepath", label: "Suppression", icon: <Trash2 size={18} /> },
+  { id: "failure", label: "Pannes & Quorum", icon: <ShieldAlert size={18} /> },
 ];
 
+function useLocalStorage(key, initialValue) {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      if (item) {
+        if (key === "simcass_downNodes") return new Set(JSON.parse(item));
+        return JSON.parse(item);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+    return initialValue;
+  });
+
+  const setValue = (value) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      if (key === "simcass_downNodes") {
+        window.localStorage.setItem(key, JSON.stringify(Array.from(valueToStore)));
+      } else {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  return [storedValue, setValue];
+}
+
 export default function App() {
-  // ── Utilitaires de Cache ───────────────────────────────────────────────────
   const clearCache = () => {
     ["simcass_strategy", "simcass_tab", "simcass_nodes", "simcass_tokens", 
      "simcass_allData", "simcass_selectedUser", "simcass_consistency", "simcass_downNodes"].forEach(k => localStorage.removeItem(k));
   };
 
-  // ── Stratégie (Persistée) ──────────────────────────────────────────────────
-  const [strategyConfig, setStrategyConfig] = useState(() => {
-    const saved = localStorage.getItem("simcass_strategy");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [strategyConfig, setStrategyConfig] = useLocalStorage("simcass_strategy", null);
+  const [tab, setTab] = useLocalStorage("simcass_tab", "cluster");
+  const [consistency, setConsistency] = useLocalStorage("simcass_consistency", "QUORUM");
+  const [downNodes, setDownNodes] = useLocalStorage("simcass_downNodes", new Set());
+  const [selectedUser, setSelectedUser] = useLocalStorage("simcass_selectedUser", null);
 
-  // ── Cluster & Etat Global (Persisté) ───────────────────────────────────────
-  const [tab, setTab] = useState(() => localStorage.getItem("simcass_tab") || "cluster");
-  
-  const [nodes, setNodes] = useState(() => {
-    const saved = localStorage.getItem("simcass_nodes");
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [nodesWithTokens, setNodesWithTokens] = useState(() => {
-    const saved = localStorage.getItem("simcass_tokens");
-    return saved ? JSON.parse(saved) : [];
-  });
-  
-  const [allData, setAllData] = useState(() => {
-    const saved = localStorage.getItem("simcass_allData");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [selectedUser, setSelectedUser] = useState(() => {
-    const saved = localStorage.getItem("simcass_selectedUser");
-    return saved ? JSON.parse(saved) : null;
-  });
-
-  const [consistency, setConsistency] = useState(() => localStorage.getItem("simcass_consistency") || "QUORUM");
-
-  const [downNodes, setDownNodes] = useState(() => {
-    const saved = localStorage.getItem("simcass_downNodes");
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
+  const [nodes, setNodes] = useState([]);
+  const [nodesWithTokens, setNodesWithTokens] = useState([]);
+  const [allData, setAllData] = useState([]);
 
   const [backendStatus, setBackendStatus] = useState("loading");
   const [autoPlayId, setAutoPlayId] = useState(0);
 
-  // ── Formulaire d'insertion ─────────────────────────────────────────────────
+  // Forms
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [insertLoading, setInsertLoading] = useState(false);
   const [insertError, setInsertError] = useState("");
 
-  // ── Modaux CRUD ────────────────────────────────────────────────────────────
+  // Modals
   const [modal, setModal] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState("");
@@ -90,24 +97,9 @@ export default function App() {
     setModalError("");
   };
 
-  // ── Synchro LocalStorage (Sauvegarde automatique) ──────────────────────────
-  useEffect(() => {
-    if (strategyConfig) localStorage.setItem("simcass_strategy", JSON.stringify(strategyConfig));
-  }, [strategyConfig]);
+  const selectedUserRef = useRef(selectedUser);
+  useEffect(() => { selectedUserRef.current = selectedUser; }, [selectedUser]);
 
-  useEffect(() => { localStorage.setItem("simcass_tab", tab); }, [tab]);
-  useEffect(() => { localStorage.setItem("simcass_nodes", JSON.stringify(nodes)); }, [nodes]);
-  useEffect(() => { localStorage.setItem("simcass_tokens", JSON.stringify(nodesWithTokens)); }, [nodesWithTokens]);
-  useEffect(() => { localStorage.setItem("simcass_allData", JSON.stringify(allData)); }, [allData]);
-  useEffect(() => { localStorage.setItem("simcass_consistency", consistency); }, [consistency]);
-  useEffect(() => { localStorage.setItem("simcass_downNodes", JSON.stringify(Array.from(downNodes))); }, [downNodes]);
-
-  useEffect(() => {
-    if (selectedUser) localStorage.setItem("simcass_selectedUser", JSON.stringify(selectedUser));
-    else localStorage.removeItem("simcass_selectedUser");
-  }, [selectedUser]);
-
-  // ── Polling cluster ────────────────────────────────────────────────────────
   const fetchCluster = useCallback(async () => {
     try {
       const [nodesRes, tokensRes, dataRes] = await Promise.all([
@@ -117,23 +109,17 @@ export default function App() {
       ]);
       setNodes(nodesRes.data.nodes);
       setNodesWithTokens(tokensRes.data.nodes);
-      
       const newData = dataRes.data.users;
       setAllData(newData);
-      
-      // Si on n'a pas de donnée sélectionnée, on prend la dernière insérée
-      if (!selectedUser && newData.length > 0) {
-        setSelectedUser(newData[newData.length - 1]);
-      } else if (selectedUser && !newData.some(u => u.user_id === selectedUser.user_id)) {
-        // La donnée sélectionnée n'existe plus en base
-        setSelectedUser(null);
-      }
-      
+
+      const current = selectedUserRef.current;
+      if (!current && newData.length > 0) setSelectedUser(newData[newData.length - 1]);
+      else if (current && !newData.some(u => u.user_id === current.user_id)) setSelectedUser(null);
       setBackendStatus("ok");
     } catch {
       setBackendStatus("error");
     }
-  }, [selectedUser]);
+  }, []);
 
   useEffect(() => {
     if (!strategyConfig) return;
@@ -142,9 +128,8 @@ export default function App() {
     return () => clearInterval(id);
   }, [fetchCluster, strategyConfig]);
 
-  // ── Actions de Réinitialisation ────────────────────────────────────────────
   const handleChangeStrategy = () => {
-    if (window.confirm("⚠️ Changer de stratégie va effacer toutes les données de la base. Voulez-vous continuer ?")) {
+    if (window.confirm("⚠️ Retourner à l'accueil effacera le cluster actuel. Continuer ?")) {
       clearCache();
       setStrategyConfig(null);
       setSelectedUser(null);
@@ -154,13 +139,12 @@ export default function App() {
   };
 
   const resetSimulation = () => {
-    if (window.confirm("🚨 Voulez-vous vraiment réinitialiser toute la simulation ? Cela videra le cache et vous ramènera à l'écran d'accueil.")) {
+    if (window.confirm("🚨 Voulez-vous vraiment réinitialiser toute la simulation ?")) {
       clearCache();
       window.location.reload();
     }
   };
 
-  // ── Filtrage des nœuds par stratégie ──────────────────────────────────────
   const filteredNodes = useMemo(() => {
     if (!strategyConfig || strategyConfig.strategy === "nts") return nodes;
     const dcs = [...new Set(nodes.map(n => n.datacenter))].sort();
@@ -178,12 +162,10 @@ export default function App() {
     return nodesWithTokens.filter(n => localAddresses.has(n.address));
   }, [nodesWithTokens, nodes, strategyConfig]);
 
-  // ── Consistency options selon la stratégie ─────────────────────────────────
   const consistencyOptions = strategyConfig?.strategy === "nts"
     ? ["LOCAL_ONE", "LOCAL_QUORUM", "EACH_QUORUM", "ONE", "QUORUM", "ALL"]
     : ["ONE", "QUORUM", "ALL"];
 
-  // ── Vérification de consistance AVANT appel API ────────────────────────────
   const checkConsistency = useCallback((user) => {
     if (!downNodes.size || !user?.token) return { can: true, up: 0, needed: 0 };
 
@@ -254,7 +236,6 @@ export default function App() {
       return { can: up >= needed, up, needed };
     }
 
-    // NTS : calcul par DC
     const byDc = {};
     replicas.forEach(r => {
       const dc = r.datacenter || "dc1";
@@ -287,13 +268,11 @@ export default function App() {
     return { can: totalUp >= needed, up: totalUp, needed };
   }, [downNodes, filteredNodesWithTokens, filteredNodes, strategyConfig, consistency]);
 
-  // ── Insertion ──────────────────────────────────────────────────────────────
   const insertUser = async () => {
     if (!userId || !name) return;
     setInsertError("");
 
-    const alreadyExists = allData.some(d => d.user_id === userId);
-    if (alreadyExists) {
+    if (allData.some(d => d.user_id === userId)) {
       setInsertError(`"${userId}" existe déjà dans la base !`);
       return;
     }
@@ -304,16 +283,14 @@ export default function App() {
     if (downNodes.size > 0 && selectedUser) {
       const check = checkConsistency(selectedUser);
       if (!check.can) {
-        setInsertError(`UnavailableException simulée — ${consistency} requiert ${check.needed} nœud(s), seulement ${check.up} disponible(s). Désactivez les pannes ou changez le niveau de consistance.`);
+        setInsertError(`Échec Consistance (${consistency}) : ${check.up}/${check.needed} nœuds requis.`);
         setInsertLoading(false);
         return;
       }
     }
 
     try {
-      const res = await axios.post(
-        `${API}/data/insert?user_id=${encodeURIComponent(userId)}&name=${encodeURIComponent(name)}&email=${encodeURIComponent(currentEmail)}`
-      );
+      const res = await axios.post(`${API}/data/insert`, { user_id: userId, name, email: currentEmail });
       const newUser = { user_id: res.data.user_id, token: res.data.token, name, email: currentEmail };
       setAllData(prev => [...prev.filter(d => d.user_id !== newUser.user_id), newUser]);
       setSelectedUser(newUser);
@@ -321,20 +298,17 @@ export default function App() {
       setTab("writepath");
       setAutoPlayId(prev => prev + 1);
     } catch (e) {
-      const msg = e.response?.data?.detail || "Erreur lors de l'insertion";
-      setInsertError(msg);
+      setInsertError(e.response?.data?.detail || "Erreur réseau.");
     }
     setInsertLoading(false);
   };
 
-  // ── Mise à jour ────────────────────────────────────────────────────────────
   const confirmUpdate = async ({ name: newName, email: newEmail }) => {
     setModalLoading(true);
-
     if (downNodes.size > 0) {
       const check = checkConsistency(modal.user);
       if (!check.can) {
-        setModalError(`UnavailableException simulée — ${consistency} requiert ${check.needed} nœud(s), seulement ${check.up} disponible(s). La modification est bloquée.`);
+        setModalError(`Échec Consistance (${consistency}).`);
         setModalLoading(false);
         return;
       }
@@ -342,9 +316,7 @@ export default function App() {
 
     const userBeforeUpdate = { ...modal.user };
     try {
-      await axios.put(
-        `${API}/data/update?user_id=${encodeURIComponent(modal.user.user_id)}&name=${encodeURIComponent(newName)}&email=${encodeURIComponent(newEmail)}`
-      );
+      await axios.put(`${API}/data/update/${encodeURIComponent(modal.user.user_id)}`, { name: newName, email: newEmail });
       const updated = { ...modal.user, name: newName, email: newEmail };
       setAllData(prev => prev.map(d => d.user_id === updated.user_id ? updated : d));
       setSelectedUser(userBeforeUpdate);
@@ -352,25 +324,18 @@ export default function App() {
       closeModal();
       setTab("updatepath");
       setAutoUpdateId(prev => prev + 1);
-
-      setTimeout(() => {
-        setSelectedUser(updated);
-        setUpdatedUser(null);
-      }, 23000);
     } catch (e) {
-      console.error("Update error", e);
+      console.error(e);
     }
     setModalLoading(false);
   };
 
-  // ── Suppression ────────────────────────────────────────────────────────────
   const confirmDelete = async () => {
     setModalLoading(true);
-
     if (downNodes.size > 0) {
       const check = checkConsistency(modal.user);
       if (!check.can) {
-        setModalError(`UnavailableException simulée — ${consistency} requiert ${check.needed} nœud(s), seulement ${check.up} disponible(s). La suppression est bloquée.`);
+        setModalError(`Échec Consistance (${consistency}).`);
         setModalLoading(false);
         return;
       }
@@ -385,44 +350,20 @@ export default function App() {
       closeModal();
       setTab("deletepath");
       setAutoDeleteId(prev => prev + 1);
-
-      setTimeout(() => {
-        setSelectedUser(prev => {
-          if (prev?.user_id === userToDelete.user_id) {
-            return remaining.length > 0 ? remaining[remaining.length - 1] : null;
-          }
-          return prev;
-        });
-      }, 23000);
     } catch (e) {
-      console.error("Delete error", e);
+      console.error(e);
     }
     setModalLoading(false);
   };
 
-  const statusBadge = {
-    loading: { cls: "badge-warning", text: "Connexion..." },
-    ok: { cls: "badge-success", text: `${filteredNodes.length} Nœuds Actifs` },
-    error: { cls: "badge-error", text: "Hors ligne" },
-  }[backendStatus];
-
-  const strategyLabel = strategyConfig?.strategy === "nts" ? "NetworkTopologyStrategy" : "SimpleStrategy";
-  const strategyColor = strategyConfig?.strategy === "nts" ? "#10b981" : "#4f46e5";
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // ÉCRAN SÉLECTION DE STRATÉGIE
-  // ─────────────────────────────────────────────────────────────────────────
   if (!strategyConfig) {
     return <StrategySelector onSelect={cfg => { setStrategyConfig(cfg); setConsistency(cfg.strategy === "nts" ? "LOCAL_QUORUM" : "QUORUM"); }} />;
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // APPLICATION PRINCIPALE
-  // ─────────────────────────────────────────────────────────────────────────
-  return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+  const strategyLabel = strategyConfig?.strategy === "nts" ? "NTS" : "Simple";
 
-      {/* Modal CRUD */}
+  return (
+    <div className="app-container">
       {modal && (
         <OperationModal
           type={modal.type}
@@ -434,222 +375,244 @@ export default function App() {
         />
       )}
 
-      {/* ── Header ── */}
-      <header style={{ background: "var(--bg-surface)", padding: "0.75rem 2rem", borderBottom: "1px solid var(--border-light)", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "var(--shadow-sm)", zIndex: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-          <h1 style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700, color: "var(--text-primary)" }}>
-            <span style={{ color: "var(--primary-color)" }}>Sim</span>Cassandra
-          </h1>
-          <span className={`badge ${statusBadge.cls}`}>{statusBadge.text}</span>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: "white", background: strategyColor, padding: "3px 10px", borderRadius: 20 }}>
-              {strategyConfig.strategy === "nts" ? "🌍 NTS" : "🔵 Simple"}
-            </span>
-            <button className="btn btn-outline" style={{ padding: "0.2rem 0.6rem", fontSize: 11 }} onClick={handleChangeStrategy}>
-              Changer
-            </button>
+      {/* ── Left Sidebar ── */}
+      <aside className="sidebar">
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "2.5rem" }}>
+          <div style={{ background: "var(--primary-light)", padding: "0.5rem", borderRadius: "var(--radius-md)" }}>
+            <Database size={24} color="var(--primary-color)" />
           </div>
-
-          <div style={{ display: "flex", gap: "0.4rem" }}>
-            <button className="btn btn-outline" style={{ padding: "0.25rem 0.75rem", fontSize: 12 }} onClick={fetchCluster}>
-              ↺ Refresh
-            </button>
-            <button className="btn btn-outline" style={{ padding: "0.25rem 0.75rem", fontSize: 12, borderColor: "#fca5a5", color: "#ef4444" }} onClick={resetSimulation}>
-              ⚠️ Reset
-            </button>
+          <div>
+            <h1 style={{ fontSize: "1.1rem" }}>SimCassandra</h1>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-tertiary)" }}>Dashboard Éducatif</div>
           </div>
         </div>
 
-        {/* Consistency */}
-        <div style={{ display: "flex", alignItems: "center", gap: "1.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)" }}>Consistency</label>
-            <select value={consistency} onChange={e => setConsistency(e.target.value)} className="input-field" style={{ padding: "0.4rem 2rem 0.4rem 0.8rem", width: "auto" }}>
-              {consistencyOptions.map(o => <option key={o} value={o}>{o}</option>)}
-            </select>
+        <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem", flex: 1 }}>
+          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem", marginTop: "0.5rem" }}>
+            Visualisations
           </div>
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`nav-item ${tab === t.id ? "active" : ""}`}>
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </nav>
+
+        <div style={{ marginTop: "auto", paddingTop: "2rem", borderTop: "1px solid var(--border-light)" }}>
+          <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+            Cluster
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+              <span style={{ color: "var(--text-secondary)" }}>Stratégie</span>
+              <span style={{ fontWeight: 600 }}>{strategyLabel}</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+              <span style={{ color: "var(--text-secondary)" }}>Statut</span>
+              <span className={`badge ${backendStatus === "ok" ? "badge-success" : "badge-error"}`}>
+                {backendStatus === "ok" ? "Connecté" : "Hors ligne"}
+              </span>
+            </div>
+          </div>
+          <button className="btn btn-outline" style={{ width: "100%", marginTop: "1rem" }} onClick={handleChangeStrategy}>
+            Retour à l'accueil
+          </button>
         </div>
-      </header>
+      </aside>
 
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+      {/* ── Main Content Area ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg-app)" }}>
+        
+        {/* Topbar */}
+        <header style={{ height: "70px", background: "var(--bg-surface)", borderBottom: "1px solid var(--border-light)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 2rem", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{TABS.find(t => t.id === tab)?.label}</span>
+          </div>
 
-        {/* ── Sidebar ── */}
-        <aside style={{ width: 300, background: "var(--bg-sidebar)", borderRight: "1px solid var(--border-light)", display: "flex", flexDirection: "column", zIndex: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)" }}>Consistance :</label>
+              <select value={consistency} onChange={e => setConsistency(e.target.value)} className="input-field" style={{ padding: "0.3rem 0.75rem", width: "auto" }}>
+                {consistencyOptions.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </div>
+            <button className="btn btn-outline" style={{ padding: "0.4rem 0.75rem" }} onClick={fetchCluster}>
+              <RotateCcw size={14} /> Actualiser
+            </button>
+          </div>
+        </header>
 
-          {/* Formulaire insertion */}
-          <div style={{ padding: "1.25rem", borderBottom: "1px solid var(--border-light)", background: "var(--bg-app)" }}>
-            <h3 style={{ margin: "0 0 0.75rem", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-              Injecter de la donnée
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-              <input className="input-field" placeholder="Clé primaire (ex: user_42)" value={userId} onChange={e => { setUserId(e.target.value); setInsertError(""); }} />
-              <input className="input-field" placeholder="Nom" value={name} onChange={e => setName(e.target.value)} />
-              <input className="input-field" placeholder="Email (optionnel)" value={email} onChange={e => setEmail(e.target.value)} />
-
-              {insertError && (
-                <div style={{ background: "var(--error-bg)", border: "1px solid #fca5a5", borderRadius: "var(--radius-md)", padding: "0.6rem 0.8rem", fontSize: 12, color: "#991b1b", lineHeight: 1.5 }}>
-                  ❌ {insertError}
+        {/* Content & Right Sidebar wrapper */}
+        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+          
+          <main className="main-content">
+            <div className="content-wrapper">
+              {tab === "cluster" && (
+                <div>
+                  <PageHeader 
+                    title="Architecture Globale & Gossip" 
+                    icon={<LayoutGrid />} 
+                    description="Visualisez la topologie physique de votre cluster Cassandra. Le réseau est maillé (P2P) et les nœuds échangent en permanence leur état via le protocole Gossip (simulé par les flux lumineux)."
+                  />
+                  <div style={{ marginTop: "1rem" }}>
+                    <Architecture nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} strategy={strategyConfig.strategy} downNodes={downNodes} />
+                  </div>
                 </div>
               )}
 
-              <button className="btn btn-primary" onClick={insertUser} disabled={insertLoading || backendStatus !== "ok" || !userId || !name} style={{ width: "100%" }}>
-                {insertLoading ? "Écriture..." : "Insérer dans Cassandra"}
-              </button>
-            </div>
-          </div>
+              {tab !== "cluster" && !selectedUser && (
+                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div className="card" style={{ textAlign: "center", padding: "5rem 3rem", borderStyle: "dashed", maxWidth: 500 }}>
+                    <div style={{ background: "var(--primary-light)", width: 64, height: 64, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
+                      <Copy size={28} color="var(--primary-color)" />
+                    </div>
+                    <h2 style={{ marginBottom: "0.5rem" }}>Sélectionnez une donnée</h2>
+                    <p>
+                      Pour explorer le fonctionnement interne (Partitionnement, Réplication, Écriture), vous devez d'abord injecter une donnée via le panneau latéral de droite, ou en sélectionner une existante.
+                    </p>
+                  </div>
+                </div>
+              )}
 
-          {/* Liste des données */}
-          <div style={{ padding: "1rem 1.25rem", flex: 1, overflowY: "auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem" }}>
-              <h3 style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase" }}>Base de données</h3>
-              <span className="badge badge-neutral">{allData.length} lignes</span>
-            </div>
+              {tab !== "cluster" && selectedUser && (
+                <>
+                  <div className="card" style={{ background: "var(--primary-light)", border: "1px solid var(--primary-border)", padding: "0.75rem 1.25rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--primary-hover)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                        Donnée Active
+                      </div>
+                      <div style={{ fontSize: "1.05rem", fontWeight: 600 }}>
+                        {selectedUser.user_id}
+                      </div>
+                    </div>
+                    <div style={{ background: "var(--bg-surface)", padding: "0.5rem 1rem", borderRadius: "var(--radius-md)", fontSize: "0.85rem", border: "1px solid var(--border-light)", fontFamily: "monospace" }}>
+                      Hash Token : <strong style={{ color: "var(--primary-color)" }}>{selectedUser.token}</strong>
+                    </div>
+                  </div>
 
-            {allData.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "2rem 0", color: "var(--text-tertiary)" }}>
-                <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📭</div>
-                <div style={{ fontSize: 13 }}>La table est vide</div>
+                  {tab === "partitionnement" && (
+                    <div>
+                      <PageHeader title="Partitionnement" icon={<PieChart />} description="Cassandra utilise une fonction de hachage (Murmur3) pour transformer votre Clé Primaire en un Token. Ce Token détermine sur quel nœud principal la donnée sera stockée en suivant l'anneau (Token Ring)." />
+                      <Partitionnement nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} selectedUser={selectedUser} allData={allData} strategy={strategyConfig.strategy} />
+                    </div>
+                  )}
+
+                  {tab === "ring" && (
+                    <div>
+                      <PageHeader title="Position sur le Ring" icon={<CircleDashed />} description="L'anneau représente l'espace de tous les tokens possibles (-2^63 à +2^63-1). Le point en surbrillance indique exactement où la donnée atterrit." />
+                      <div className="card">
+                        <TokenRing nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} highlightToken={selectedUser.token} downNodes={downNodes} strategy={strategyConfig.strategy} />
+                      </div>
+                    </div>
+                  )}
+
+                  {tab === "replication" && (
+                    <div>
+                      <PageHeader title="Réplication" icon={<Copy />} description="Pour garantir la haute disponibilité, la donnée n'est pas stockée sur un seul nœud, mais copiée sur plusieurs nœuds voisins selon le Facteur de Réplication (RF)." />
+                      <Replication nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} downNodes={downNodes} />
+                    </div>
+                  )}
+
+                  {tab === "failure" && (
+                    <div>
+                      <PageHeader title="Pannes & Quorum" icon={<ShieldAlert />} description="Simulez des pannes de nœuds en cliquant dessus. Observez comment le niveau de consistance (ex: QUORUM) permet au cluster de continuer à fonctionner même si certains nœuds sont hors ligne." />
+                      <FailureSimulator nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} setDownNodes={setDownNodes} />
+                    </div>
+                  )}
+
+                  {tab === "writepath" && (
+                    <div>
+                      <PageHeader title="Le chemin d'une Écriture" icon={<ArrowLeftRight />} description="Visualisez le parcours exact de votre donnée : du client vers le nœud coordinateur, puis vers les réplicas finaux, incluant le Commit Log et la Memtable." />
+                      <WritePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} autoPlayId={autoPlayId} downNodes={downNodes} />
+                    </div>
+                  )}
+
+                  {tab === "deletepath" && (
+                    <div>
+                      <PageHeader title="Tombstones & Suppression" icon={<Trash2 />} description="Dans Cassandra, une suppression n'efface pas immédiatement la donnée. Elle écrit un 'Tombstone' (pierre tombale), un marqueur de suppression qui sera répliqué comme une écriture normale." />
+                      <DeletePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} autoPlayId={autoDeleteId} />
+                    </div>
+                  )}
+
+                  {tab === "updatepath" && (
+                    <div>
+                      <PageHeader title="Mise à Jour (Upsert)" icon={<Edit2 />} description="Une mise à jour dans Cassandra est techniquement identique à une insertion (Upsert). L'ancienne donnée est écrasée par la nouvelle (via le système de timestamps internes)." />
+                      <UpdatePath selectedUser={selectedUser} updatedUser={updatedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} autoPlayId={autoUpdateId} />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </main>
+
+          {/* ── Right Data Panel ── */}
+          <aside style={{ width: 280, background: "var(--bg-surface)", borderLeft: "1px solid var(--border-light)", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+            {/* Injection Form */}
+            <div style={{ padding: "1.25rem", borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-app)" }}>
+              <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                <PlusCircle size={16} color="var(--primary-color)" /> Injecter une donnée
               </div>
-            ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                {allData.map(d => {
-                  const isSelected = selectedUser?.user_id === d.user_id;
-                  return (
-                    <div key={d.user_id} onClick={() => setSelectedUser(d)} className="card card-interactive"
-                      style={{ padding: "0.75rem", cursor: "pointer", background: isSelected ? "var(--primary-light)" : "var(--bg-surface)", borderColor: isSelected ? "var(--primary-color)" : "var(--border-light)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontWeight: 600, color: isSelected ? "var(--primary-hover)" : "var(--text-primary)", fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{d.user_id}</div>
-                          <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>{d.name}</div>
-                        </div>
-                        <div style={{ display: "flex", gap: "0.3rem", marginLeft: "0.5rem" }} onClick={e => e.stopPropagation()}>
-                          <button title="Modifier" onClick={() => { setModalError(""); setModal({ type: "edit", user: d }); }}
-                            style={{ width: 26, height: 26, borderRadius: 6, background: "none", border: "1px solid var(--border-light)", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
-                          <button title="Supprimer" onClick={() => { setModalError(""); setModal({ type: "delete", user: d }); }}
-                            style={{ width: 26, height: 26, borderRadius: 6, background: "none", border: "1px solid #fca5a5", cursor: "pointer", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>🗑️</button>
+                <input className="input-field" placeholder="Clé primaire (ex: user_42)" value={userId} onChange={e => { setUserId(e.target.value); setInsertError(""); }} />
+                <input className="input-field" placeholder="Nom complet" value={name} onChange={e => setName(e.target.value)} />
+                <input className="input-field" placeholder="Email (optionnel)" value={email} onChange={e => setEmail(e.target.value)} />
+
+                {insertError && (
+                  <div style={{ background: "var(--error-bg)", borderRadius: "var(--radius-sm)", padding: "0.75rem", fontSize: "0.8rem", color: "var(--error-color)", display: "flex", gap: "0.5rem", alignItems: "flex-start", border: "1px solid var(--error-border)" }}>
+                    <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ lineHeight: 1.4 }}>{insertError}</span>
+                  </div>
+                )}
+
+                <button className="btn btn-primary" onClick={insertUser} disabled={insertLoading || backendStatus !== "ok" || !userId || !name} style={{ width: "100%" }}>
+                  {insertLoading ? "En cours..." : "Insérer (Write)"}
+                </button>
+              </div>
+            </div>
+
+            {/* Data List */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Base de données</div>
+                <span className="badge badge-neutral">{allData.length} lignes</span>
+              </div>
+
+              {allData.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "3rem 0", color: "var(--text-tertiary)" }}>
+                  <Database size={32} strokeWidth={1} style={{ marginBottom: "1rem", opacity: 0.5 }} />
+                  <div style={{ fontSize: "0.85rem" }}>Aucune donnée.</div>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  {allData.map(d => {
+                    const isSelected = selectedUser?.user_id === d.user_id;
+                    return (
+                      <div key={d.user_id} onClick={() => setSelectedUser(d)} className="card card-interactive"
+                        style={{ padding: "1rem", cursor: "pointer", background: isSelected ? "var(--bg-app)" : "var(--bg-surface)", borderColor: isSelected ? "var(--primary-color)" : "var(--border-subtle)", boxShadow: isSelected ? "var(--shadow-sm)" : "none" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, color: isSelected ? "var(--primary-hover)" : "var(--text-primary)", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis" }}>{d.user_id}</div>
+                            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: 2 }}>{d.name}</div>
+                          </div>
+                          <div style={{ display: "flex", gap: "0.25rem" }} onClick={e => e.stopPropagation()}>
+                            <button title="Modifier" onClick={() => { setModalError(""); setModal({ type: "edit", user: d }); }}
+                              className="btn btn-ghost" style={{ padding: "0.3rem" }}>
+                              <Edit2 size={14} />
+                            </button>
+                            <button title="Supprimer" onClick={() => { setModalError(""); setModal({ type: "delete", user: d }); }}
+                              className="btn btn-ghost" style={{ padding: "0.3rem", color: "var(--error-color)" }}>
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div style={{ fontSize: 10, color: "var(--text-tertiary)", marginTop: 6, fontFamily: "monospace", background: isSelected ? "rgba(255,255,255,0.6)" : "var(--bg-app)", padding: "3px 5px", borderRadius: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        Token: {d.token}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </aside>
-
-        {/* ── Main Content ── */}
-        <main style={{ flex: 1, display: "flex", flexDirection: "column", overflowY: "auto", position: "relative" }}>
-
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: "0.5rem", padding: "0.75rem 2rem 0", background: "var(--bg-surface)", borderBottom: "1px solid var(--border-light)", position: "sticky", top: 0, zIndex: 10 }}>
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)} className={`tab-btn ${tab === t.id ? "active" : ""}`}>{t.label}</button>
-            ))}
-          </div>
-
-          {/* Content */}
-          <div style={{ padding: "2rem", maxWidth: 1100, margin: "0 auto", width: "100%" }}>
-
-            {tab === "cluster" && (
-              <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "3rem" }}>
-                <div style={{ width: "100%", maxWidth: 800, marginBottom: "2rem", textAlign: "center" }}>
-                  <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)" }}>Architecture Globale</h2>
-                  <p style={{ margin: 0, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                    Voici l'état actuel de votre cluster Cassandra ({strategyConfig.strategy === "nts" ? "Multi-Datacenters" : "SimpleStrategy"}).
-                  </p>
+                    );
+                  })}
                 </div>
-                <TokenRing
-                  nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes}
-                  nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens}
-                  highlightToken={null} 
-                  downNodes={downNodes}
-                  strategy={strategyConfig.strategy}
-                />
-              </div>
-            )}
-
-            {tab !== "cluster" && !selectedUser ? (
-              <div className="card" style={{ textAlign: "center", padding: "4rem 2rem", borderStyle: "dashed" }}>
-                <div style={{ fontSize: "3rem", marginBottom: "1.5rem" }}>👈</div>
-                <h2 style={{ color: "var(--text-primary)", marginBottom: "0.5rem" }}>Sélectionne une donnée</h2>
-                <p style={{ color: "var(--text-secondary)", maxWidth: 500, margin: "0 auto" }}>
-                  Insère une donnée ou clique sur un enregistrement existant pour démarrer la simulation visuelle.
-                </p>
-              </div>
-            ) : tab !== "cluster" && selectedUser ? (
-              <>
-                {/* Fil conducteur */}
-                <div className="card" style={{ background: "var(--primary-light)", borderLeft: "4px solid var(--primary-color)", padding: "0.875rem 1.5rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: "var(--primary-hover)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
-                      Analyse — {strategyLabel}
-                    </div>
-                    <div style={{ fontSize: 15, color: "var(--text-primary)" }}>
-                      Clé : <strong style={{ color: "var(--primary-color)" }}>{selectedUser.user_id}</strong>
-                    </div>
-                  </div>
-                  <div style={{ background: "var(--bg-surface)", padding: "0.4rem 0.9rem", borderRadius: "var(--radius-md)", fontSize: 11, border: "1px solid var(--border-light)", fontFamily: "monospace", color: "var(--text-secondary)" }}>
-                    Token Murmur3 : <strong>{selectedUser.token}</strong>
-                  </div>
-                </div>
-
-                {tab === "partitionnement" && <Partitionnement nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} selectedUser={selectedUser} allData={allData} strategy={strategyConfig.strategy} />}
-
-                {tab === "ring" && (
-                  <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "3rem" }}>
-                    <div style={{ width: "100%", maxWidth: 800, marginBottom: "2rem" }}>
-                      <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)" }}>Où atterrit le token ?</h2>
-                      <p style={{ margin: 0, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-                        Cassandra utilise le hachage cohérent. Le hash de <strong>{selectedUser.user_id}</strong> détermine le nœud responsable
-                        {strategyConfig.strategy === "nts" ? " dans chaque Data Center." : "."}
-                      </p>
-                    </div>
-                    <TokenRing
-                      nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes}
-                      nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens}
-                      highlightToken={selectedUser.token}
-                      downNodes={downNodes}
-                      strategy={strategyConfig.strategy}
-                    />
-                  </div>
-                )}
-
-                {tab === "replication" && (
-                  <Replication nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser}
-                    rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} downNodes={downNodes} />
-                )}
-
-                {tab === "failure" && (
-                  <FailureSimulator nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser}
-                    rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy}
-                    consistency={consistency} downNodes={downNodes} setDownNodes={setDownNodes} />
-                )}
-
-                {tab === "writepath" && (
-                  <WritePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens}
-                    rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy}
-                    consistency={consistency} autoPlayId={autoPlayId} downNodes={downNodes} />
-                )}
-
-                {tab === "deletepath" && (
-                  <DeletePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens}
-                    rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy}
-                    consistency={consistency} downNodes={downNodes} autoPlayId={autoDeleteId} />
-                )}
-
-                {tab === "updatepath" && (
-                  <UpdatePath selectedUser={selectedUser} updatedUser={updatedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens}
-                    rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy}
-                    consistency={consistency} downNodes={downNodes} autoPlayId={autoUpdateId} />
-                )}
-              </>
-            ) : null}
-          </div>
-        </main>
+              )}
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );

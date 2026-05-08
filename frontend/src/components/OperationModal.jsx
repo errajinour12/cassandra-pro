@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Trash2, Edit2, AlertTriangle } from "lucide-react";
 
 /**
  * OperationModal — modal réutilisable pour :
@@ -33,7 +34,9 @@ export default function OperationModal({ type, user, onConfirm, onCancel, loadin
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
           <div>
-            <div style={{ fontSize: 22, marginBottom: 6 }}>{isDelete ? "🗑️" : "✏️"}</div>
+            <div style={{ marginBottom: 12, display: "inline-flex", padding: 10, borderRadius: 12, background: isDelete ? "var(--error-bg)" : "var(--primary-light)" }}>
+              {isDelete ? <Trash2 size={24} color="var(--error-color)" /> : <Edit2 size={24} color="var(--primary-color)" />}
+            </div>
             <h3 style={{ margin: 0, color: isDelete ? "var(--error-color)" : "var(--text-primary)", fontSize: "1.2rem" }}>
               {isDelete ? "Supprimer l'enregistrement" : "Modifier l'enregistrement"}
             </h3>
@@ -54,16 +57,23 @@ export default function OperationModal({ type, user, onConfirm, onCancel, loadin
             fontSize: 13,
             color: "#991b1b",
             marginBottom: "1.25rem",
-            lineHeight: 1.5
+            lineHeight: 1.5,
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "flex-start"
           }}>
-            ❌ {error}
+            <AlertTriangle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
+            <span>{error}</span>
           </div>
         )}
 
         {/* Contenu */}
         {isDelete ? (
-          <div style={{ background: "var(--error-bg)", borderRadius: "var(--radius-md)", padding: "1rem 1.25rem", marginBottom: "1.5rem", border: "1px solid #fca5a5", fontSize: 14, color: "#991b1b", lineHeight: 1.6 }}>
-            ⚠️ Cette action est <strong>irréversible</strong>. La donnée <strong>«{user?.user_id}»</strong> sera supprimée de tous les nœuds réplicas.
+          <div style={{ background: "var(--error-bg)", borderRadius: "var(--radius-md)", padding: "1rem 1.25rem", marginBottom: "1.5rem", border: "1px solid #fca5a5", fontSize: 14, color: "#991b1b", lineHeight: 1.6, display: "flex", gap: "0.6rem", alignItems: "flex-start" }}>
+            <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+            <div>
+              Cette action est <strong>irréversible</strong>. La donnée <strong>«{user?.user_id}»</strong> sera supprimée de tous les nœuds réplicas.
+            </div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>

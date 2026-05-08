@@ -1,21 +1,31 @@
+import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from cassandra_client import connect, get_session, get_cluster
 
-app = FastAPI()
+# ── CORS — origines autorisées via variable d'environnement ──────────────────
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# ── Lifespan (remplace @app.on_event("startup"), déprécié depuis FastAPI 0.93)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    connect()          # démarrage : connexion Cassandra avec retry
+    yield
+    # (optionnel) cluster.shutdown() ici si besoin de cleanup
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[FRONTEND_URL, "http://localhost:5173"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def startup():
-    connect()
 
 
 @app.get("/")
@@ -45,7 +55,7 @@ def get_tokens():
             "address":    str(host.address),
             "datacenter": host.datacenter,
             "rack":       host.rack,
-            "is_up":      True,
+            "is_up":      host.is_up,
             "tokens":     tokens
         })
     return {"nodes": result}
@@ -75,11 +85,11 @@ def change_strategy(config: StrategyConfig):
         alter_strategy_nts(config.dc_options)
         dc_detail = ", ".join([f"{k}={v}" for k, v in config.dc_options.items()])
         label = f"NetworkTopologyStrategy ({dc_detail})"
-    
+
     # Réinitialise les données pour ne pas mélanger les simulations
     session = get_session()
     session.execute("TRUNCATE users")
-    
+
     return {"message": f"Stratégie changée en {label}. Les données ont été réinitialisées."}
 
 
@@ -95,11 +105,27 @@ def get_all_users():
     ]}
 
 
-@app.post("/data/insert")
-def insert_user(user_id: str, name: str, email: str):
-    session = get_session()
+# ── Modèles pour les requêtes body JSON ──────────────────────────────────────
 
-    # ── Vérification doublon (Option B : bloquer) ──
+class UserInsert(BaseModel):
+    user_id: str
+    name: str
+    email: str = ""
+
+
+class UserUpdate(BaseModel):
+    name: str = None
+    email: str = None
+
+
+@app.post("/data/insert")
+def insert_user(user: UserInsert):
+    session = get_session()
+    user_id = user.user_id
+    name = user.name
+    email = user.email or f"{user_id}@example.com"
+
+    # ── Vérification doublon ──
     existing = session.execute(
         "SELECT user_id FROM users WHERE user_id = %s", (user_id,)
     ).one()
@@ -119,8 +145,8 @@ def insert_user(user_id: str, name: str, email: str):
     return {"user_id": user_id, "token": str(row[0]), "message": "Inséré avec succès"}
 
 
-@app.put("/data/update")
-def update_user(user_id: str, name: str = None, email: str = None):
+@app.put("/data/update/{user_id}")
+def update_user(user_id: str, body: UserUpdate):
     session = get_session()
     existing = session.execute(
         "SELECT user_id, name, email FROM users WHERE user_id = %s", (user_id,)
@@ -128,8 +154,8 @@ def update_user(user_id: str, name: str = None, email: str = None):
     if not existing:
         raise HTTPException(status_code=404, detail=f"L'utilisateur «{user_id}» n'existe pas.")
 
-    new_name  = name  if name  else existing.name
-    new_email = email if email else existing.email
+    new_name  = body.name  if body.name  else existing.name
+    new_email = body.email if body.email else existing.email
 
     session.execute(
         "UPDATE users SET name = %s, email = %s WHERE user_id = %s",

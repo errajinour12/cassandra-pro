@@ -1,3 +1,5 @@
+import { Globe } from "lucide-react";
+
 // ─── Palette DC ────────────────────────────────────────────────────────────────
 const DC_PALETTE = {
   dc1: { ring: "#4f46e5", label: "#818cf8", bg: "#4f46e510" },
@@ -213,7 +215,7 @@ export default function Partitionnement({ nodes, nodesWithTokens, selectedUser, 
       <div>
         <div className="card" style={{ marginBottom: "1.5rem" }}>
           <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)", fontSize: "1.25rem" }}>
-            🌍 Partitionnement — NetworkTopologyStrategy
+            <><Globe size={18} style={{marginRight:6}}/> Partitionnement</> — NetworkTopologyStrategy
           </h2>
           <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.6 }}>
             En <strong>NTS</strong>, chaque Data Center dispose de <strong>son propre anneau de hachage</strong>.

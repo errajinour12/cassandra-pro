@@ -1,42 +1,57 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
 :root {
-  /* Colors - Light Ultra Clean */
+  /* Ultra-Clean SaaS Palette */
   --bg-app: #f8fafc;
-  --bg-surface: #ffffff;
   --bg-sidebar: #ffffff;
+  --bg-surface: #ffffff;
+  
+  --border-subtle: #f1f5f9;
   --border-light: #e2e8f0;
+  --border-hover: #cbd5e1;
   
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-tertiary: #94a3b8;
   
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
+  /* Brand Primary */
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
   --primary-light: #eff6ff;
+  --primary-border: #bfdbfe;
   
-  --success-color: #10b981;
+  /* Status Colors */
+  --success-color: #059669;
   --success-bg: #ecfdf5;
-  --error-color: #ef4444;
+  --success-border: #a7f3d0;
+  
+  --error-color: #dc2626;
   --error-bg: #fef2f2;
-  --warning-color: #f59e0b;
+  --error-border: #fecaca;
+  
+  --warning-color: #d97706;
   --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
 
-  /* Node Colors */
+  /* Node Colors for Ring (Distinct & Pedagogical) */
   --node-0: #4f46e5; /* Indigo */
   --node-1: #0ea5e9; /* Sky */
   --node-2: #10b981; /* Emerald */
   --node-3: #f59e0b; /* Amber */
   --node-4: #8b5cf6; /* Violet */
+  --node-5: #ec4899; /* Pink */
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  /* Modern Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -4px rgba(0, 0, 0, 0.03);
   
+  /* Radii */
+  --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-2xl: 24px;
 }
 
 * {
@@ -45,78 +60,195 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg-app);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
-/* Utilities */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin-top: 0;
+  color: var(--text-secondary);
+}
+
+/* ── Layout ── */
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+.sidebar {
+  width: 240px;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1rem;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 2.5rem;
+  width: 100%;
+}
+
+/* ── Typography & Pedagogical Texts ── */
+.page-title {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-description {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 800px;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* ── Utilities ── */
 .card {
   background: var(--bg-surface);
-  border-radius: var(--radius-xl);
-  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
   box-shadow: var(--shadow-sm);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border-subtle);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .card-interactive:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
   transform: translateY(-2px);
+  border-color: var(--border-hover);
 }
 
+/* ── Buttons ── */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.6rem 1.2rem;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
   border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 13px;
+  font-weight: 500;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: none;
+  border: 1px solid transparent;
   font-family: 'Inter', sans-serif;
+  outline: none;
+  white-space: nowrap;
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 3px var(--primary-light), 0 0 0 1px var(--primary-color);
 }
 
 .btn-primary {
   background: var(--primary-color);
   color: white;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
   transform: translateY(-1px);
 }
 
 .btn-primary:disabled {
-  background: var(--text-tertiary);
+  background: var(--border-light);
+  color: var(--text-tertiary);
   box-shadow: none;
   cursor: not-allowed;
 }
 
 .btn-outline {
   background: transparent;
-  border: 1px solid var(--border-light);
+  border-color: var(--border-light);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: var(--bg-app);
+  border-color: var(--border-hover);
+}
+
+.btn-ghost {
+  background: transparent;
   color: var(--text-secondary);
 }
 
-.btn-outline:hover {
+.btn-ghost:hover {
   background: var(--bg-app);
   color: var(--text-primary);
-  border-color: #cbd5e1;
 }
 
+/* ── Sidebar Nav Items ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item:hover {
+  background: var(--bg-app);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* ── Forms ── */
 .input-field {
   width: 100%;
-  padding: 0.6rem 0.8rem;
+  padding: 0.6rem 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-light);
-  font-size: 13px;
+  font-size: 0.9rem;
   font-family: 'Inter', sans-serif;
   color: var(--text-primary);
   background: var(--bg-surface);
@@ -129,226 +261,395 @@ body {
   box-shadow: 0 0 0 3px var(--primary-light);
 }
 
+.input-field::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* ── Badges ── */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 9999px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
 }
 
-.badge-success { background: var(--success-bg); color: var(--success-color); }
-.badge-error { background: var(--error-bg); color: var(--error-color); }
-.badge-warning { background: var(--warning-bg); color: var(--warning-color); }
-.badge-primary { background: var(--primary-light); color: var(--primary-color); }
-.badge-neutral { background: #f1f5f9; color: var(--text-secondary); }
+.badge-success { background: var(--success-bg); color: var(--success-color); border-color: var(--success-border); }
+.badge-error { background: var(--error-bg); color: var(--error-color); border-color: var(--error-border); }
+.badge-warning { background: var(--warning-bg); color: var(--warning-color); border-color: var(--warning-border); }
+.badge-primary { background: var(--primary-light); color: var(--primary-color); border-color: var(--primary-border); }
+.badge-neutral { background: var(--bg-app); color: var(--text-secondary); border-color: var(--border-light); }
 
-/* Animations */
-@keyframes pulse-ring {
-  0% { transform: scale(0.9); opacity: 1; }
-  100% { transform: scale(1.4); opacity: 0; }
-}
-
-.animate-pulse-ring {
-  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Node cards Specific */
+/* ── Node Rings Specifics ── */
 .node-card {
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .node-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; height: 4px;
+  top: 0; left: 0; right: 0; height: 5px;
   background: var(--node-color, #e2e8f0);
-  opacity: 0.8;
 }
 
-/* Tabs */
-.tab-btn {
-  padding: 1rem 1.5rem;
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--text-tertiary);
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
-}
-.tab-btn:hover {
-  color: var(--text-secondary);
-}
-.tab-btn.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-}
-
-/* --- Animations Write Path (Refonte Cluster) --- */
-
-.system-node {
-  position: absolute;
-  background: var(--bg-surface);
-  border: 2px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  padding: 1rem;
-  text-align: center;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
-  z-index: 10;
-  transform: translate(-50%, -50%);
-}
-
-.system-node.client-node { width: 100px; }
-.system-node.coord-node { width: 140px; }
-.system-node.replica-node { width: 160px; }
-
-.node-label {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--text-primary);
-  margin-top: 0.5rem;
-}
-
-.active-node {
-  border-color: var(--primary-color);
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-  transform: translate(-50%, -50%) scale(1.05);
-}
-
-.status-badge {
-  position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--bg-surface);
-  border: 1px solid var(--border-light);
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.ping-badge {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-  animation: ping-pulse 1s infinite;
-}
-
-.error-badge {
-  background: var(--error-color);
-  color: white;
-  border-color: var(--error-color);
-}
-
-@keyframes ping-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-  70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
-}
-
-.internal-engine {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 10px;
-  opacity: 0;
-  height: 0;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.internal-engine.show-engine {
-  opacity: 1;
-  height: auto;
-}
-
-.engine-part {
-  background: var(--bg-app);
-  border: 1px solid var(--border-light);
-  border-radius: 4px;
-  font-size: 10px;
-  padding: 2px 5px;
-  transition: background 0.2s;
-}
-
-.flash-write {
-  animation: write-flash 0.5s ease;
-}
-
-@keyframes write-flash {
-  0% { background: var(--success-bg); border-color: var(--success-color); }
-  100% { background: var(--bg-app); border-color: var(--border-light); }
-}
-
-/* Animations de paquets dynamiques (CSS Variables) */
-
-.data-packet {
-  position: absolute;
+/* ── Stepper Animations ── */
+.stepper-container {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 2rem;
+}
+.stepper-line {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--border-light);
+  z-index: 1;
+}
+.step-item {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 0.5rem;
-  background: white;
-  padding: 0.4rem 0.8rem;
-  border-radius: 20px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--primary-color);
-  font-size: 1.2rem;
+}
+.step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  border: 2px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  transition: all 0.3s ease;
+}
+.step-item.active .step-circle {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 0 4px var(--primary-light);
+}
+.step-item.completed .step-circle {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+.step-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.step-item.active .step-label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+
+/* ── Cisco-Style Dashboard Layout ── */
+.flow-dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.flow-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
   z-index: 20;
+}
+
+.flow-canvas {
+  flex: 1;
+  position: relative;
+  background-color: #f4f7fb;
+  background-image: 
+    linear-gradient(rgba(37, 99, 235, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Node Styling (Cisco/Datadog Network Map Style) ── */
+.net-node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  padding: 1rem 0.5rem;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.net-node:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  border-color: var(--border-hover);
+}
+
+.net-node.active {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light), 0 8px 20px rgba(37, 99, 235, 0.15);
+}
+
+.net-icon-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-app);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+
+.net-node.active .net-icon-wrapper {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-color: var(--primary-border);
+}
+
+.net-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.net-sublabel {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.2rem;
+}
+
+/* Radar Animation for Coordinator */
+@keyframes radarSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.radar-ring {
+  position: absolute;
+  top: -10px; left: -10px; right: -10px; bottom: -10px;
+  border-radius: 50%;
+  border: 1px dashed var(--primary-color);
+  opacity: 0.4;
+  animation: radarSweep 4s linear infinite;
   pointer-events: none;
-  /* Start pos by default */
-  top: var(--start-y);
-  left: var(--start-x);
-  transform: translate(-50%, -50%) scale(0.5);
+}
+
+/* Micro LED Indicators for Engine */
+.led-panel {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+  width: 100%;
+  justify-content: center;
+}
+.led-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--text-tertiary);
+}
+.led-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-hover);
+  transition: all 0.3s;
+}
+
+/* LED States */
+.led-dot.active-write { background: var(--success-color); box-shadow: 0 0 6px var(--success-color); }
+.led-dot.active-update { background: var(--warning-color); box-shadow: 0 0 6px var(--warning-color); }
+.led-dot.active-delete { background: var(--error-color); box-shadow: 0 0 6px var(--error-color); }
+
+/* Status Badges */
+.net-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 15;
+}
+.badge-down { background: var(--error-color); }
+.badge-ping { background: var(--warning-color); animation: pulsePing 1.5s infinite; }
+
+/* ── Fiber Optic Path Animations ── */
+.fiber-path {
+  fill: none;
+  stroke: var(--border-light);
+  stroke-width: 2px;
+  transition: all 0.3s;
+}
+
+.fiber-path.active {
+  stroke: var(--primary-color);
+  stroke-width: 3px;
+  opacity: 0.3;
+}
+
+/* The actual light beam traveling along the path */
+.fiber-beam {
+  fill: none;
+  stroke-width: 4px;
+  stroke-linecap: round;
+  /* length of the dash determines beam length */
+  stroke-dasharray: 40 1000;
+  stroke-dashoffset: 1040;
+  opacity: 0;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.beam-write { stroke: var(--primary-color); }
+.beam-update { stroke: var(--warning-color); }
+.beam-delete { stroke: var(--error-color); }
+.beam-ack { stroke: var(--success-color); stroke-width: 3px; stroke-dasharray: 20 1000; }
+
+@keyframes shootBeamForwards {
+  0% { stroke-dashoffset: 1040; opacity: 1; }
+  90% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+@keyframes shootBeamBackwards {
+  0% { stroke-dashoffset: 0; opacity: 1; }
+  90% { stroke-dashoffset: 1040; opacity: 1; }
+  100% { stroke-dashoffset: 1040; opacity: 0; }
+}
+
+/* We trigger animation by adding this class dynamically */
+.animate-forward { animation: shootBeamForwards 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-backward { animation: shootBeamBackwards 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+/* Tombstone icon animation */
+@keyframes tombstoneDrop {
+  0% { transform: translateY(-10px) scale(1.5); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+.tombstone-anim {
+  animation: tombstoneDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ── Particle Animations (HTML Divs) ── */
+.data-particle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  z-index: 50;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: flyParticle 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   opacity: 0;
 }
 
-.hidden {
-  opacity: 0;
-  visibility: hidden;
+.particle-write {
+  background: #fff;
+  box-shadow: 0 0 15px 5px rgba(37, 99, 235, 0.8), 0 0 30px rgba(37, 99, 235, 0.6);
 }
 
-.ack-packet {
-  border-color: var(--success-color);
-  background: var(--success-bg);
+.particle-update {
+  background: #fff;
+  box-shadow: 0 0 15px 5px rgba(245, 158, 11, 0.8), 0 0 30px rgba(245, 158, 11, 0.6);
 }
 
-/* 1. Client -> Coord */
-.anim-c-to-coord { animation: movePacket 3.5s forwards ease-in-out; }
-/* 2. Coord -> Replicas */
-.anim-coord-to-rep { animation: movePacket 3.5s forwards ease-in-out; }
-/* 4. Replicas -> Coord */
-.anim-rep-to-coord { animation: movePacket 3.5s forwards ease-in-out; }
-/* 5. Coord -> Client */
-.anim-coord-to-c { animation: movePacket 3.5s forwards ease-in-out; }
+.particle-delete {
+  background: #fff;
+  box-shadow: 0 0 15px 5px rgba(220, 38, 38, 0.8), 0 0 30px rgba(220, 38, 38, 0.6);
+}
 
-@keyframes movePacket {
-  0% { top: var(--start-y); left: var(--start-x); transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-  10% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  90% { top: var(--end-y); left: var(--end-x); transform: translate(-50%, -50%) scale(1); opacity: 1; }
-  100% { top: var(--end-y); left: var(--end-x); transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+.particle-ack {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  box-shadow: 0 0 10px 4px rgba(16, 185, 129, 0.8);
+  animation-duration: 1s; /* Faster ACKs */
+}
+
+@keyframes flyParticle {
+  0% { top: var(--start-y); left: var(--start-x); opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { top: var(--end-y); left: var(--end-x); opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+}
+
+/* Delay classes so particles don't all shoot at exactly the same time if we want staggered effects */
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+.delay-3 { animation-delay: 0.6s; }
+
+/* ── Server Vibration (Phase 3) ── */
+@keyframes serverVibrate {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-51%, -50%) rotate(-1deg); }
+  50% { transform: translate(-50%, -51%) rotate(1deg); }
+  75% { transform: translate(-49%, -50%) rotate(-1deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+.server-vibrating {
+  animation: serverVibrate 0.2s infinite;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* ── LED Hyper Blink ── */
+@keyframes ledHyperBlink {
+  0%, 100% { opacity: 1; transform: scale(1.5); }
+  50% { opacity: 0.3; transform: scale(1); }
+}
+.led-hyper-blink {
+  animation: ledHyperBlink 0.1s infinite;
+}
+
+/* ── Missing LED Pulse Keyframe ── */
+@keyframes ledPulse {
+  0%, 100% { opacity: 1; transform: scale(1.3); }
+  50% { opacity: 0.3; transform: scale(1); }
 }

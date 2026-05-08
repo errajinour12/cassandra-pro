@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Building2, PowerOff, CheckCircle2, XCircle, Star, RefreshCw, RotateCcw } from "lucide-react";
 
 const DC_COLORS = {
   dc1: { primary: "#4f46e5", bg: "#4f46e510", border: "#4f46e550", text: "#818cf8", kill: "#4f46e530" },
@@ -220,12 +221,12 @@ export default function FailureSimulator({ nodes, nodesWithTokens, selectedUser,
         <div style={{ fontSize: 10, color: "var(--text-tertiary)", fontFamily: "monospace", marginTop: 2 }}>{n.address}</div>
         <div style={{ marginTop: "0.6rem" }}>
           {isReallyDown
-            ? <span className="badge badge-error" style={{ fontSize: 10 }}>PANNE RÉELLE</span>
+            ? <span className="badge badge-error" style={{ fontSize: 10 }}><PowerOff size={10} style={{ marginRight: 4 }}/> PANNE RÉELLE</span>
             : isSimDown
-              ? <span className="badge badge-error" style={{ fontSize: 10 }}>SIMULÉE</span>
+              ? <span className="badge badge-error" style={{ fontSize: 10 }}><PowerOff size={10} style={{ marginRight: 4 }}/> SIMULÉE</span>
               : hasData
-                ? <span className="badge" style={{ fontSize: 10, background: `${nodeColor}15`, color: nodeColor, border: `1px solid ${nodeColor}40` }}>
-                    {isPrimary ? "⭐ PRIMARY" : "🔄 REPLICA"}
+                ? <span className="badge" style={{ fontSize: 10, background: `${nodeColor}15`, color: nodeColor, border: `1px solid ${nodeColor}40`, display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                    {isPrimary ? <><Star size={10} /> PRIMARY</> : <><RefreshCw size={10} /> REPLICA</>}
                   </span>
                 : <span className="badge badge-neutral" style={{ fontSize: 10 }}>Vide</span>}
         </div>
@@ -251,7 +252,7 @@ export default function FailureSimulator({ nodes, nodesWithTokens, selectedUser,
                 : `Clique sur un nœud pour simuler une panne. Observe si la consistance ${consistency} peut être maintenue.`}
             </p>
           </div>
-          <button onClick={() => setDownNodes(new Set())} className="btn btn-outline">↺ Réinitialiser</button>
+          <button onClick={() => setDownNodes(new Set())} className="btn btn-outline"><RotateCcw size={14} /> Réinitialiser</button>
         </div>
 
         {/* Dashboard RF / Consistency */}
@@ -289,9 +290,9 @@ export default function FailureSimulator({ nodes, nodesWithTokens, selectedUser,
               return (
                 <div key={dc} style={{ flex: 1, minWidth: 280, background: colors.bg, border: `1.5px solid ${colors.border}`, borderRadius: 16, padding: "1.25rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                    <span style={{ fontWeight: 700, fontSize: 15, color: colors.primary }}>🏢 {dc.toUpperCase()}</span>
-                    <button onClick={() => killDc(dc)} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, cursor: "pointer", border: `1px solid ${colors.border}`, background: allDcDown ? colors.kill : "transparent", color: allDcDown ? colors.primary : colors.text, fontWeight: 600, transition: "all 0.2s" }}>
-                      {allDcDown ? "✅ Remettre DC" : "☠️ Kill DC"}
+                    <span style={{ fontWeight: 700, fontSize: 15, color: colors.primary, display: "flex", alignItems: "center", gap: "0.4rem" }}><Building2 size={16} /> {dc.toUpperCase()}</span>
+                    <button onClick={() => killDc(dc)} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, cursor: "pointer", border: `1px solid ${colors.border}`, background: allDcDown ? colors.kill : "transparent", color: allDcDown ? colors.primary : colors.text, fontWeight: 600, transition: "all 0.2s", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                      {allDcDown ? <><CheckCircle2 size={12} /> Remettre DC</> : <><PowerOff size={12} /> Kill DC</>}
                     </button>
                   </div>
                   <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
@@ -309,7 +310,9 @@ export default function FailureSimulator({ nodes, nodesWithTokens, selectedUser,
 
         {/* Résultat final */}
         <div style={{ borderRadius: "var(--radius-lg)", padding: "1.25rem", background: canRespond ? "var(--success-bg)" : "var(--error-bg)", border: `1px solid ${canRespond ? "#6ee7b7" : "#fca5a5"}`, display: "flex", gap: "1rem", alignItems: "flex-start" }}>
-          <div style={{ fontSize: "1.5rem" }}>{canRespond ? "✅" : "❌"}</div>
+          <div style={{ fontSize: "1.5rem", color: canRespond ? "var(--success-color)" : "var(--error-color)", marginTop: "2px" }}>
+            {canRespond ? <CheckCircle2 size={24} /> : <XCircle size={24} />}
+          </div>
           <div>
             <h3 style={{ margin: "0 0 0.5rem", color: canRespond ? "var(--success-color)" : "var(--error-color)", fontSize: "1.1rem" }}>
               {canRespond ? "SUCCÈS — La requête passera" : "ÉCHEC — UnavailableException"}

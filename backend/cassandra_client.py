@@ -1,21 +1,41 @@
+import os
+import time
 from cassandra.cluster import Cluster
 from cassandra.policies import RoundRobinPolicy
+
+# ── Configuration via variable d'environnement ───────────────────────────────
+CASSANDRA_HOST = os.getenv("CASSANDRA_HOST", "127.0.0.1")
 
 cluster = None
 session = None
 
 
-def connect():
+def connect(retries: int = 10, delay: int = 10):
+    """
+    Se connecte à Cassandra avec mécanisme de retry.
+    Utilise la variable CASSANDRA_HOST (défaut: 127.0.0.1 pour dev local,
+    à surcharger avec le nom DNS Docker en production).
+    """
     global cluster, session
-    cluster = Cluster(
-        contact_points=["127.0.0.1"],
-        port=9042,
-        load_balancing_policy=RoundRobinPolicy(),
-        protocol_version=4
+    for attempt in range(1, retries + 1):
+        try:
+            cluster = Cluster(
+                contact_points=[CASSANDRA_HOST],
+                port=9042,
+                load_balancing_policy=RoundRobinPolicy(),
+                protocol_version=4
+            )
+            session = cluster.connect()
+            _setup_keyspace_simple(3)
+            print(f"✅ Connecté à Cassandra sur {CASSANDRA_HOST} !")
+            return
+        except Exception as e:
+            print(f"⏳ Tentative {attempt}/{retries} — impossible de joindre Cassandra ({e})")
+            if attempt < retries:
+                time.sleep(delay)
+    raise RuntimeError(
+        f"❌ Impossible de se connecter à Cassandra après {retries} tentatives."
     )
-    session = cluster.connect()
-    _setup_keyspace_simple(3)
-    print("Connecté à Cassandra !")
 
 
 def _setup_table():
@@ -73,7 +93,7 @@ def get_nodes_info():
             "address":    str(host.address),
             "datacenter": host.datacenter,
             "rack":       host.rack,
-            "is_up":      True   # forcé True (driver hors Docker ne voit pas les IPs internes)
+            "is_up":      host.is_up  # état réel rapporté par le driver
         })
     return nodes
 
