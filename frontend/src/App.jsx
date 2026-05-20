@@ -12,6 +12,8 @@ import StrategySelector from "./components/StrategySelector";
 import OperationModal from "./components/OperationModal";
 import PageHeader from "./components/PageHeader";
 import Architecture from "./components/Architecture";
+import Tooltip from "./components/Tooltip";
+import FullScreenModal from "./components/FullScreenModal";
 import "./index.css";
 
 const API = "http://localhost:8000";
@@ -446,103 +448,17 @@ export default function App() {
         <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
           
           <main className="main-content">
-            <div className="content-wrapper">
-              {tab === "cluster" && (
-                <div>
-                  <PageHeader 
-                    title="Architecture Globale & Gossip" 
-                    icon={<LayoutGrid />} 
-                    description="Visualisez la topologie physique de votre cluster Cassandra. Le réseau est maillé (P2P) et les nœuds échangent en permanence leur état via le protocole Gossip (simulé par les flux lumineux)."
-                  />
-                  <div style={{ marginTop: "1rem" }}>
-                    <Architecture nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} strategy={strategyConfig.strategy} downNodes={downNodes} />
-                  </div>
+                      {/* Architecture is always rendered in background */}
+              <div className="content-wrapper">
+                <PageHeader 
+                  title="Architecture Globale & Gossip" 
+                  icon={<LayoutGrid />} 
+                  description={<span>Visualisez la topologie physique de votre cluster Cassandra. Le réseau est maillé (P2P) et les nœuds échangent en permanence leur état via le protocole <Tooltip text="Protocole P2P permettant aux nœuds d'échanger leur état de santé et de topologie.">Gossip</Tooltip> (simulé par les flux lumineux).</span>}
+                />
+                <div style={{ marginTop: "1rem" }}>
+                  <Architecture nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} strategy={strategyConfig.strategy} downNodes={downNodes} />
                 </div>
-              )}
-
-              {tab !== "cluster" && !selectedUser && (
-                <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <div className="card" style={{ textAlign: "center", padding: "5rem 3rem", borderStyle: "dashed", maxWidth: 500 }}>
-                    <div style={{ background: "var(--primary-light)", width: 64, height: 64, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
-                      <Copy size={28} color="var(--primary-color)" />
-                    </div>
-                    <h2 style={{ marginBottom: "0.5rem" }}>Sélectionnez une donnée</h2>
-                    <p>
-                      Pour explorer le fonctionnement interne (Partitionnement, Réplication, Écriture), vous devez d'abord injecter une donnée via le panneau latéral de droite, ou en sélectionner une existante.
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {tab !== "cluster" && selectedUser && (
-                <>
-                  <div className="card" style={{ background: "var(--primary-light)", border: "1px solid var(--primary-border)", padding: "0.75rem 1.25rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--primary-hover)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
-                        Donnée Active
-                      </div>
-                      <div style={{ fontSize: "1.05rem", fontWeight: 600 }}>
-                        {selectedUser.user_id}
-                      </div>
-                    </div>
-                    <div style={{ background: "var(--bg-surface)", padding: "0.5rem 1rem", borderRadius: "var(--radius-md)", fontSize: "0.85rem", border: "1px solid var(--border-light)", fontFamily: "monospace" }}>
-                      Hash Token : <strong style={{ color: "var(--primary-color)" }}>{selectedUser.token}</strong>
-                    </div>
-                  </div>
-
-                  {tab === "partitionnement" && (
-                    <div>
-                      <PageHeader title="Partitionnement" icon={<PieChart />} description="Cassandra utilise une fonction de hachage (Murmur3) pour transformer votre Clé Primaire en un Token. Ce Token détermine sur quel nœud principal la donnée sera stockée en suivant l'anneau (Token Ring)." />
-                      <Partitionnement nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} selectedUser={selectedUser} allData={allData} strategy={strategyConfig.strategy} />
-                    </div>
-                  )}
-
-                  {tab === "ring" && (
-                    <div>
-                      <PageHeader title="Position sur le Ring" icon={<CircleDashed />} description="L'anneau représente l'espace de tous les tokens possibles (-2^63 à +2^63-1). Le point en surbrillance indique exactement où la donnée atterrit." />
-                      <div className="card">
-                        <TokenRing nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} highlightToken={selectedUser.token} downNodes={downNodes} strategy={strategyConfig.strategy} />
-                      </div>
-                    </div>
-                  )}
-
-                  {tab === "replication" && (
-                    <div>
-                      <PageHeader title="Réplication" icon={<Copy />} description="Pour garantir la haute disponibilité, la donnée n'est pas stockée sur un seul nœud, mais copiée sur plusieurs nœuds voisins selon le Facteur de Réplication (RF)." />
-                      <Replication nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} downNodes={downNodes} />
-                    </div>
-                  )}
-
-                  {tab === "failure" && (
-                    <div>
-                      <PageHeader title="Pannes & Quorum" icon={<ShieldAlert />} description="Simulez des pannes de nœuds en cliquant dessus. Observez comment le niveau de consistance (ex: QUORUM) permet au cluster de continuer à fonctionner même si certains nœuds sont hors ligne." />
-                      <FailureSimulator nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} setDownNodes={setDownNodes} />
-                    </div>
-                  )}
-
-                  {tab === "writepath" && (
-                    <div>
-                      <PageHeader title="Le chemin d'une Écriture" icon={<ArrowLeftRight />} description="Visualisez le parcours exact de votre donnée : du client vers le nœud coordinateur, puis vers les réplicas finaux, incluant le Commit Log et la Memtable." />
-                      <WritePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} autoPlayId={autoPlayId} downNodes={downNodes} />
-                    </div>
-                  )}
-
-                  {tab === "deletepath" && (
-                    <div>
-                      <PageHeader title="Tombstones & Suppression" icon={<Trash2 />} description="Dans Cassandra, une suppression n'efface pas immédiatement la donnée. Elle écrit un 'Tombstone' (pierre tombale), un marqueur de suppression qui sera répliqué comme une écriture normale." />
-                      <DeletePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} autoPlayId={autoDeleteId} />
-                    </div>
-                  )}
-
-                  {tab === "updatepath" && (
-                    <div>
-                      <PageHeader title="Mise à Jour (Upsert)" icon={<Edit2 />} description="Une mise à jour dans Cassandra est techniquement identique à une insertion (Upsert). L'ancienne donnée est écrasée par la nouvelle (via le système de timestamps internes)." />
-                      <UpdatePath selectedUser={selectedUser} updatedUser={updatedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} autoPlayId={autoUpdateId} />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+              </div>
           </main>
 
           {/* ── Right Data Panel ── */}
@@ -613,6 +529,92 @@ export default function App() {
             </div>
           </aside>
         </div>
+
+        {/* ── FullScreen Modal for Simulations ── */}
+        {tab !== "cluster" && (
+          <FullScreenModal onClose={() => setTab("cluster")}>
+            {!selectedUser ? (
+              <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="card" style={{ textAlign: "center", padding: "5rem 3rem", borderStyle: "dashed", maxWidth: 500 }}>
+                  <div style={{ background: "var(--primary-light)", width: 64, height: 64, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
+                    <Copy size={28} color="var(--primary-color)" />
+                  </div>
+                  <h2 style={{ marginBottom: "0.5rem" }}>Sélectionnez une donnée</h2>
+                  <p>
+                    Pour explorer le fonctionnement interne (Partitionnement, Réplication, Écriture), vous devez d'abord injecter une donnée via le panneau latéral de droite, ou en sélectionner une existante.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="card" style={{ background: "var(--primary-light)", border: "1px solid var(--primary-border)", padding: "0.75rem 1.25rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--primary-hover)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
+                      Donnée Active
+                    </div>
+                    <div style={{ fontSize: "1.05rem", fontWeight: 600 }}>
+                      {selectedUser.user_id}
+                    </div>
+                  </div>
+                  <div style={{ background: "var(--bg-surface)", padding: "0.5rem 1rem", borderRadius: "var(--radius-md)", fontSize: "0.85rem", border: "1px solid var(--border-light)", fontFamily: "monospace" }}>
+                    Hash Token : <strong style={{ color: "var(--primary-color)" }}>{selectedUser.token}</strong>
+                  </div>
+                </div>
+
+                {tab === "partitionnement" && (
+                  <div>
+                    <PageHeader title="Partitionnement" icon={<PieChart />} description={<span>Cassandra utilise une fonction de hachage (<Tooltip text="Algorithme de hachage ultra-rapide utilisé par Cassandra.">Murmur3</Tooltip>) pour transformer votre <Tooltip text="Identifiant unique d'une ligne, dont la clé de partition est hachée pour le placement.">Clé Primaire</Tooltip> en un <Tooltip text="Entier généré par hachage déterminant la position de la donnée sur l'anneau.">Token</Tooltip>. Ce Token détermine sur quel nœud principal la donnée sera stockée en suivant l'anneau (<Tooltip text="Anneau virtuel de tokens de -2^63 à +2^63-1.">Token Ring</Tooltip>).</span>} />
+                    <Partitionnement nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} selectedUser={selectedUser} allData={allData} strategy={strategyConfig.strategy} />
+                  </div>
+                )}
+
+                {tab === "ring" && (
+                  <div>
+                    <PageHeader title="Position sur le Ring" icon={<CircleDashed />} description={<span>L'anneau représente l'espace de tous les tokens possibles (-2^63 à +2^63-1). Le point en surbrillance indique exactement où la donnée atterrit.</span>} />
+                    <div className="card">
+                      <TokenRing nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} highlightToken={selectedUser.token} downNodes={downNodes} strategy={strategyConfig.strategy} />
+                    </div>
+                  </div>
+                )}
+
+                {tab === "replication" && (
+                  <div>
+                    <PageHeader title="Réplication" icon={<Copy />} description={<span>Pour garantir la haute disponibilité, la donnée n'est pas stockée sur un seul nœud, mais copiée sur plusieurs nœuds voisins selon le <Tooltip text="Nombre de copies totales d'une donnée dans le cluster.">Facteur de Réplication (RF)</Tooltip>.</span>} />
+                    <Replication nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} downNodes={downNodes} />
+                  </div>
+                )}
+
+                {tab === "failure" && (
+                  <div>
+                    <PageHeader title="Pannes & Quorum" icon={<ShieldAlert />} description={<span>Simulez des pannes de nœuds en cliquant dessus. Observez comment le niveau de consistance (ex: <Tooltip text="Niveau exigeant la majorité des réplicas (RF/2 + 1) pour valider l'opération.">QUORUM</Tooltip>) permet au cluster de continuer à fonctionner même si certains nœuds sont hors ligne.</span>} />
+                    <FailureSimulator nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} setDownNodes={setDownNodes} />
+                  </div>
+                )}
+
+                {tab === "writepath" && (
+                  <div>
+                    <PageHeader title="Le chemin d'une Écriture" icon={<ArrowLeftRight />} description={<span>Visualisez le parcours exact de votre donnée : du client vers le nœud coordinateur, puis vers les réplicas finaux, incluant le <Tooltip text="Journal d'ajout séquentiel garantissant la durabilité (sur disque) des écritures.">Commit Log</Tooltip> et la <Tooltip text="Structure en mémoire (RAM) tamponnant les écritures avant leur vidage sur disque (SSTable).">Memtable</Tooltip>.</span>} />
+                    <WritePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} autoPlayId={autoPlayId} downNodes={downNodes} />
+                  </div>
+                )}
+
+                {tab === "deletepath" && (
+                  <div>
+                    <PageHeader title="Tombstones & Suppression" icon={<Trash2 />} description={<span>Dans Cassandra, une suppression n'efface pas immédiatement la donnée. Elle écrit un <Tooltip text="Marqueur de suppression permettant d'effacer une donnée de manière distribuée.">Tombstone</Tooltip> (pierre tombale), un marqueur de suppression qui sera répliqué comme une écriture normale.</span>} />
+                    <DeletePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} autoPlayId={autoDeleteId} />
+                  </div>
+                )}
+
+                {tab === "updatepath" && (
+                  <div>
+                    <PageHeader title="Mise à Jour (Upsert)" icon={<Edit2 />} description={<span>Une mise à jour dans Cassandra est techniquement identique à une insertion (<Tooltip text="Opération qui insère une donnée si elle n'existe pas, ou la met à jour si elle existe.">Upsert</Tooltip>). L'ancienne donnée est écrasée par la nouvelle (via le système de timestamps internes).</span>} />
+                    <UpdatePath selectedUser={selectedUser} updatedUser={updatedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} autoPlayId={autoUpdateId} />
+                  </div>
+                )}
+              </>
+            )}
+          </FullScreenModal>
+        )}
       </div>
     </div>
   );

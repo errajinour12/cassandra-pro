@@ -13,22 +13,29 @@ export default function OperationModal({ type, user, onConfirm, onCancel, loadin
   const isDelete = type === "delete";
 
   const overlay = {
-    position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)",
+    position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.4)",
     display: "flex", alignItems: "center", justifyContent: "center",
-    zIndex: 1000, backdropFilter: "blur(4px)"
+    zIndex: 1000, backdropFilter: "blur(6px)",
+    animation: "overlayFadeIn 0.3s ease-out forwards"
   };
 
   const box = {
-    background: "var(--bg-surface)", borderRadius: "var(--radius-xl)",
-    padding: "2rem", width: 420, maxWidth: "90vw",
-    boxShadow: "0 25px 60px rgba(0,0,0,0.3)",
-    border: `1px solid ${isDelete ? "var(--error-color)" : "var(--border-light)"}40`,
-    animation: "modalIn 0.2s ease"
+    background: "var(--bg-surface)", borderRadius: "var(--radius-2xl)",
+    padding: "2.5rem", width: 440, maxWidth: "90vw",
+    boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+    border: `1px solid ${isDelete ? "var(--error-border)" : "var(--border-light)"}`,
+    animation: "modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards"
   };
 
   return (
     <div style={overlay} onClick={e => e.target === e.currentTarget && onCancel()}>
-      <style>{`@keyframes modalIn { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }`}</style>
+      <style>{`
+        @keyframes overlayFadeIn { from { opacity:0; } to { opacity:1; } }
+        @keyframes modalSlideUp { 
+          from { transform: translateY(30px) scale(0.95); opacity:0; } 
+          to { transform: translateY(0) scale(1); opacity:1; } 
+        }
+      `}</style>
       <div style={box}>
 
         {/* Header */}

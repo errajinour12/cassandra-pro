@@ -626,14 +626,28 @@ p {
 .delay-2 { animation-delay: 0.4s; }
 .delay-3 { animation-delay: 0.6s; }
 
-/* ── Server Vibration (Phase 3) ── */
-@keyframes serverVibrate {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  25% { transform: translate(-51%, -50%) rotate(-1deg); }
-  50% { transform: translate(-50%, -51%) rotate(1deg); }
-  75% { transform: translate(-49%, -50%) rotate(-1deg); }
-  100% { transform: translate(-50%, -50%) rotate(0deg); }
+@keyframes dataPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.8; }
 }
+
+@keyframes serverVibrate {
+  0% { transform: translate(-50%, -50%) translate(0, 0); }
+  20% { transform: translate(-50%, -50%) translate(-1px, 1px); }
+  40% { transform: translate(-50%, -50%) translate(1px, -1px); }
+  60% { transform: translate(-50%, -50%) translate(-1px, -1px); }
+  80% { transform: translate(-50%, -50%) translate(1px, 1px); }
+  100% { transform: translate(-50%, -50%) translate(0, 0); }
+}
+
+@keyframes pulseCoord {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+  70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+
+/* ── Server Vibration (Phase 3) ── */
 .server-vibrating {
   animation: serverVibrate 0.2s infinite;
   box-shadow: 0 0 20px rgba(16, 185, 129, 0.3) !important;
@@ -643,6 +657,12 @@ p {
 @keyframes ledHyperBlink {
   0%, 100% { opacity: 1; transform: scale(1.5); }
   50% { opacity: 0.3; transform: scale(1); }
+}
+
+@keyframes ledPulse {
+  0% { box-shadow: 0 0 0px #10b981; }
+  50% { box-shadow: 0 0 12px #10b981; }
+  100% { box-shadow: 0 0 0px #10b981; }
 }
 .led-hyper-blink {
   animation: ledHyperBlink 0.1s infinite;

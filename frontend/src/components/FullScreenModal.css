@@ -1,0 +1,97 @@
+.fs-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.5); /* Semi-transparent dark background */
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  animation: fsOverlayFadeIn 0.4s ease-out forwards;
+}
+
+.fs-modal-content {
+  background: var(--bg-surface);
+  width: 100%;
+  max-width: 1600px; /* Big enough for simulations */
+  height: 90vh; /* 90% of viewport height */
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.4);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fsModalZoomIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.fs-modal-close {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: var(--bg-app);
+  border: 1px solid var(--border-light);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.fs-modal-close:hover {
+  background: var(--error-bg);
+  color: var(--error-color);
+  border-color: var(--error-border);
+  transform: scale(1.05);
+}
+
+.fs-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2.5rem 3rem;
+  position: relative;
+}
+
+@keyframes fsOverlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fsModalZoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Responsiveness for mobile */
+@media (max-width: 768px) {
+  .fs-modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .fs-modal-content {
+    height: 95vh;
+  }
+
+  .fs-modal-body {
+    padding: 1.5rem;
+  }
+
+  .fs-modal-close {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+  }
+}
