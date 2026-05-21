@@ -1,16 +1,27 @@
-# React + Vite
+# 🍩 SimCassandra - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Ce répertoire contient l'interface utilisateur de **SimCassandra**, développée avec React et Vite.
 
-Currently, two official plugins are available:
+## 🚀 Dernières Modifications
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Initialisation de l'application frontend** : Mise en place des composants UI de base (core UI components).
+- **Gestion d'état (State Management)** : Intégration de la logique de gestion d'état pour la synchronisation en temps réel.
+- **Outils de visualisation du cluster** : Ajout des composants permettant de visualiser graphiquement l'anneau Cassandra (Token Ring), l'architecture globale (Gossip), et les flux dynamiques (Écriture, Mise à jour, Suppression).
 
-## React Compiler
+## 🛠️ Commandes
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Voici les commandes principales pour faire fonctionner l'interface :
 
-## Expanding the ESLint configuration
+```bash
+# 1. Installer toutes les dépendances requises
+npm install
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# 2. Lancer le serveur de développement (avec rechargement à chaud)
+npm run dev
+
+# 3. Construire le projet pour la production (génère le dossier dist/)
+npm run build
+
+# 4. Prévisualiser la version de production en local
+npm run preview
+```
