@@ -6,13 +6,13 @@ import {
   getReplicas, buildDcsLayout, getConsistencyText
 } from "./FlowShared";
 
-const STEP_LABELS = ["Prêt", "Localisation", "Envoi", "Upsert", "Quorum", "Résultat"];
+const STEP_LABELS = ["Ready", "Routing", "Send", "Upsert", "Quorum", "Result"];
 
 const STEP_DESCRIPTIONS = [
-  "Le client veut modifier une donnée existante. Dans Cassandra, une mise à jour est techniquement identique à une nouvelle insertion — on appelle cela un Upsert. Il n'y a pas de 'lecture avant écriture'.",
-  "Le Coordinateur hache la clé primaire pour identifier les réplicas responsables de la donnée, exactement comme lors d'une insertion initiale.",
-  "Le Coordinateur envoie la nouvelle valeur aux réplicas. Chaque paquet contient un timestamp (horodatage en microsecondes). C'est ce timestamp qui arbitre quel est le 'dernier' état valide.",
-  "Sur chaque réplica : la nouvelle version est écrite dans le Commit Log puis dans la Memtable. L'ancienne valeur reste sur disque (SSTable) jusqu'à la prochaine Compaction — le timestamp la rend obsolète à la lecture.",
+  "The client wants to modify existing data. In Cassandra, an update is technically identical to a new insertion — this is called an Upsert. There is no 'read before write'.",
+  "The Coordinator hashes the primary key to identify the replicas responsible for the data, exactly like an initial insertion.",
+  "The Coordinator sends the new value to the replicas. Each packet contains a timestamp (in microseconds). This timestamp arbitrates which is the 'latest' valid state.",
+  "On each replica: the new version is written to the Commit Log then to the Memtable. The old value remains on disk (SSTable) until the next Compaction — the timestamp makes it obsolete during reads.",
   null,
   null,
 ];
@@ -48,8 +48,8 @@ export default function UpdatePath({ selectedUser, updatedUser, nodes, nodesWith
     ? getConsistencyText(consistency)
     : step === 5
       ? (isGlobalSuccess
-        ? `✅ Mise à jour validée selon le niveau "${consistency}". La nouvelle valeur (${updatedUser?.name || "—"}) est maintenant la version canonique grâce à son timestamp plus récent.`
-        : `❌ Mise à jour échouée. Insuffisamment de réplicas disponibles pour le niveau de consistance "${consistency}".`)
+        ? `✅ Update validated according to consistency level "${consistency}". The new value (${updatedUser?.name || "—"}) is now the canonical version thanks to its more recent timestamp.`
+        : `❌ Update failed. Insufficient replicas available for consistency level "${consistency}".`)
       : STEP_DESCRIPTIONS[step];
 
   const CLIENT_POS = { x: 0.07, y: 0.5 };
@@ -84,9 +84,9 @@ export default function UpdatePath({ selectedUser, updatedUser, nodes, nodesWith
           </motion.div>
         </AnimatePresence>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", flexShrink: 0 }}>
-          <button className="btn btn-outline" onClick={prevStep} disabled={step === 0} style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>◀ Préc.</button>
+          <button className="btn btn-outline" onClick={prevStep} disabled={step === 0} style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>◀ Prev</button>
           <button className="btn" onClick={nextStep} disabled={step === 5}
-            style={{ background: ACCENT, color: "white", border: "none", padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>Suiv. ▶</button>
+            style={{ background: ACCENT, color: "white", border: "none", padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>Next ▶</button>
         </div>
       </div>
 
@@ -125,8 +125,8 @@ export default function UpdatePath({ selectedUser, updatedUser, nodes, nodesWith
 
         {/* Coordinator */}
         <NodeCard
-          label="Coordinateur"
-          sublabel="Nœud Entrant"
+          label="Coordinator"
+          sublabel="Entry Node"
           icon={<Settings size={22} />}
           isActive={step >= 1 && step < 5}
           isRadar={step === 1 || step === 4}
@@ -146,7 +146,7 @@ export default function UpdatePath({ selectedUser, updatedUser, nodes, nodesWith
             return (
               <NodeCard
                 key={rp.nodeIdx}
-                label={`Nœud ${rp.nodeIdx + 1}`}
+                label={`Node ${rp.nodeIdx + 1}`}
                 sublabel={`DC: ${dc.name}`}
                 icon={rp.isDown ? <Flame size={22} /> : <Server size={22} />}
                 isActive={step >= 2 && !rp.isDown}

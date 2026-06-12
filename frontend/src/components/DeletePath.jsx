@@ -6,13 +6,13 @@ import {
   getReplicas, buildDcsLayout, getConsistencyText
 } from "./FlowShared";
 
-const STEP_LABELS = ["Demande", "Localisation", "Propagation", "Marquage", "Quorum", "Résultat"];
+const STEP_LABELS = ["Request", "Localization", "Propagation", "Marking", "Quorum", "Result"];
 
 const STEP_DESCRIPTIONS = [
-  "Le client veut supprimer une donnée. Cassandra n'efface pas immédiatement — c'est trop lent et trop risqué en environnement distribué. Il utilise un mécanisme spécial : le Tombstone ⚰️.",
-  "Le Coordinateur hache la clé primaire pour localiser les nœuds responsables de cette donnée. La logique est identique à une écriture normale.",
-  "Au lieu d'un ordre d'effacement, le Coordinateur envoie un Tombstone ⚰️ — une donnée spéciale qui 'masque' la valeur réelle. Il est propagé aux réplicas exactement comme une écriture.",
-  "Les réplicas actifs écrivent le Tombstone dans le Commit Log (disque) puis dans la Memtable (RAM). La donnée n'est pas encore supprimée du disque — elle est juste masquée.",
+  "The client wants to delete data. Cassandra doesn't erase immediately — it's too slow and risky in a distributed environment. It uses a special mechanism: the Tombstone ⚰️.",
+  "The Coordinator hashes the primary key to locate the nodes responsible for this data. The logic is identical to a normal write.",
+  "Instead of a deletion command, the Coordinator sends a Tombstone ⚰️ — a special data that 'masks' the actual value. It is propagated to replicas exactly like a write.",
+  "Active replicas write the Tombstone to the Commit Log (disk) then to the Memtable (RAM). The data is not yet deleted from the disk — it is just masked.",
   null,
   null,
 ];
@@ -48,8 +48,8 @@ export default function DeletePath({ selectedUser, updatedUser, nodes, nodesWith
     ? getConsistencyText(consistency)
     : step === 5
       ? (isGlobalSuccess
-        ? `✅ Tombstone posé avec succès. La donnée est masquée selon le niveau "${consistency}". Elle sera physiquement effacée lors d'une prochaine Compaction (après le délai gc_grace_seconds).`
-        : `❌ Suppression échouée. Trop de réplicas sont hors ligne pour satisfaire le niveau de consistance "${consistency}".`)
+        ? `✅ Tombstone placed successfully. The data is masked according to the "${consistency}" level. It will be physically erased during a future Compaction (after the gc_grace_seconds delay).`
+        : `❌ Deletion failed. Too many replicas are offline to satisfy the "${consistency}" consistency level.`)
       : STEP_DESCRIPTIONS[step];
 
   const CLIENT_POS = { x: 0.07, y: 0.5 };
@@ -84,9 +84,9 @@ export default function DeletePath({ selectedUser, updatedUser, nodes, nodesWith
           </motion.div>
         </AnimatePresence>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", flexShrink: 0 }}>
-          <button className="btn btn-outline" onClick={prevStep} disabled={step === 0} style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>◀ Préc.</button>
+          <button className="btn btn-outline" onClick={prevStep} disabled={step === 0} style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>◀ Prev.</button>
           <button className="btn" onClick={nextStep} disabled={step === 5}
-            style={{ background: ACCENT, color: "white", border: "none", padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>Suiv. ▶</button>
+            style={{ background: ACCENT, color: "white", border: "none", padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>Next ▶</button>
         </div>
       </div>
 
@@ -113,8 +113,8 @@ export default function DeletePath({ selectedUser, updatedUser, nodes, nodesWith
         />
 
         <NodeCard
-          label="Coordinateur"
-          sublabel="Nœud Entrant"
+          label="Coordinator"
+          sublabel="Entry Node"
           icon={<Settings size={22} />}
           isActive={step >= 1 && step < 5}
           isRadar={step === 1 || step === 4}
@@ -133,7 +133,7 @@ export default function DeletePath({ selectedUser, updatedUser, nodes, nodesWith
             return (
               <NodeCard
                 key={rp.nodeIdx}
-                label={`Nœud ${rp.nodeIdx + 1}`}
+                label={`Node ${rp.nodeIdx + 1}`}
                 sublabel={`DC: ${dc.name}`}
                 icon={rp.isDown ? <Flame size={22} /> : <Server size={22} />}
                 isActive={step >= 2 && !rp.isDown}

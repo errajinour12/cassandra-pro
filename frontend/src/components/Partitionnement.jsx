@@ -58,7 +58,7 @@ function DcPartitionRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, al
       borderRadius: 16, padding: "1.25rem 1rem 1rem", flex: "0 0 auto"
     }}>
       <div style={{ fontSize: 12, fontWeight: 700, color: palette.label, textTransform: "uppercase", letterSpacing: 1 }}>
-        🗄 {dcName.toUpperCase()} — {dcNodes.length} Nœuds
+        🗄 {dcName.toUpperCase()} — {dcNodes.length} Nodes
       </div>
 
       <svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}
@@ -137,7 +137,7 @@ function DcPartitionRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, al
         <text x={cx} y={cy - 7} textAnchor="middle" dominantBaseline="central"
           fill={palette.label} fontSize={12} fontWeight="700">{dcName.toUpperCase()}</text>
         <text x={cx} y={cy + 9} textAnchor="middle" dominantBaseline="central"
-          fill="var(--text-tertiary)" fontSize={9}>{dcNodes.length} nœuds</text>
+          fill="var(--text-tertiary)" fontSize={9}>{dcNodes.length} nodes</text>
       </svg>
     </div>
   );
@@ -158,7 +158,7 @@ function DcLoadTable({ dcName, dcNodes, dcNodesWithTokens, globalIndices, allDat
       <div style={{ background: palette.bg, padding: "0.6rem 1rem", borderBottom: `1px solid ${palette.ring}30`, display: "flex", alignItems: "center", gap: "0.5rem" }}>
         <div style={{ width: 10, height: 10, borderRadius: "50%", background: palette.ring }} />
         <span style={{ fontWeight: 700, fontSize: 13, color: palette.label }}>{dcName.toUpperCase()}</span>
-        <span style={{ fontSize: 11, color: "var(--text-tertiary)", marginLeft: 4 }}>{dcNodes.length} nœuds</span>
+        <span style={{ fontSize: 11, color: "var(--text-tertiary)", marginLeft: 4 }}>{dcNodes.length} nodes</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", padding: "0.75rem" }}>
         {dcNodes.map((n, i) => {
@@ -174,7 +174,7 @@ function DcLoadTable({ dcName, dcNodes, dcNodesWithTokens, globalIndices, allDat
                   <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>({n.address})</span>
                 </div>
                 <span className="badge" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-light)", color: "var(--text-secondary)", fontSize: 11 }}>
-                  {nodeKeys.length} clé(s)
+                  {nodeKeys.length} key(s)
                 </span>
               </div>
               <div style={{ width: "100%", height: 5, background: "var(--bg-surface)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--border-light)" }}>
@@ -215,12 +215,12 @@ export default function Partitionnement({ nodes, nodesWithTokens, selectedUser, 
       <div>
         <div className="card" style={{ marginBottom: "1.5rem" }}>
           <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)", fontSize: "1.25rem" }}>
-            <><Globe size={18} style={{marginRight:6}}/> Partitionnement</> — NetworkTopologyStrategy
+            <><Globe size={18} style={{marginRight:6}}/> Partitioning</> — NetworkTopologyStrategy
           </h2>
           <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.6 }}>
-            En <strong>NTS</strong>, chaque Data Center dispose de <strong>son propre anneau de hachage</strong>.
-            Les données sont répliquées indépendamment dans chaque DC selon son <em>Replication Factor</em>.
-            Les points représentent tes données dans chaque anneau local.
+            In <strong>NTS</strong>, each Data Center has <strong>its own hash ring</strong>.
+            Data is replicated independently in each DC according to its <em>Replication Factor</em>.
+            The points represent your data in each local ring.
           </p>
         </div>
 
@@ -247,7 +247,7 @@ export default function Partitionnement({ nodes, nodesWithTokens, selectedUser, 
           {/* Charge par nœud, par DC */}
           <div className="card">
             <h3 style={{ margin: "0 0 1rem", fontSize: 16, color: "var(--text-primary)" }}>
-              Charge par Nœud — par Data Center
+              Load by Node — per Data Center
             </h3>
             <div style={{ display: "flex", gap: "1.25rem", flexWrap: "wrap" }}>
               {dcs.map(dc => {
@@ -286,18 +286,18 @@ export default function Partitionnement({ nodes, nodesWithTokens, selectedUser, 
   return (
     <div>
       <div className="card" style={{ marginBottom: "1.5rem" }}>
-        <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)", fontSize: "1.25rem" }}>Partitionnement Global</h2>
+        <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)", fontSize: "1.25rem" }}>Global Partitioning</h2>
         <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.6 }}>
-          Pour simplifier la compréhension, cet anneau est découpé en <strong>{totalNodes} parts égales</strong> (une par nœud).
-          Lorsqu'une donnée est insérée, Cassandra calcule son <em>Hash</em> et l'envoie vers le nœud responsable.
-          Les points ci-dessous représentent tes données assignées à leur nœud respectif.
+          To simplify understanding, this ring is divided into <strong>{totalNodes} equal parts</strong> (one per node).
+          When data is inserted, Cassandra calculates its <em>Hash</em> and sends it to the responsible node.
+          The points below represent your data assigned to their respective nodes.
         </p>
       </div>
 
       <div style={{ display: "flex", gap: "1.5rem", flexDirection: "column" }}>
         <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
           <div className="card" style={{ flex: "1 1 360px", display: "flex", flexDirection: "column", alignItems: "center", padding: "1.5rem" }}>
-            <div style={{ fontSize: 13, color: "var(--text-tertiary)", marginBottom: "1rem", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase" }}>Anneau Logique Simplifié</div>
+            <div style={{ fontSize: 13, color: "var(--text-tertiary)", marginBottom: "1rem", fontWeight: 600, letterSpacing: "0.5px", textTransform: "uppercase" }}>Simplified Logical Ring</div>
             <svg width={360} height={360} viewBox="0 0 360 360" style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.08))" }}>
               <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border-light)" strokeWidth={30} opacity={0.3} />
 
@@ -328,7 +328,7 @@ export default function Partitionnement({ nodes, nodesWithTokens, selectedUser, 
                 return (
                   <text key={`label-${i}`} x={lx} y={ly} textAnchor="middle" dominantBaseline="central"
                     fill={`var(--node-${seg.nodeIdx % 5})`} fontSize={14} fontWeight="700">
-                    Nœud {i + 1}
+                    Node {i + 1}
                   </text>
                 );
               })}
@@ -368,14 +368,14 @@ export default function Partitionnement({ nodes, nodesWithTokens, selectedUser, 
 
             <div style={{ marginTop: "1.5rem", background: "var(--bg-app)", padding: "1rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-light)", width: "100%", maxWidth: 400 }}>
               <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: 13, color: "var(--text-secondary)" }}>
-                <li><strong style={{ color: "var(--text-primary)" }}>Couleurs :</strong> Chaque couleur représente le territoire d'un nœud.</li>
-                <li><strong style={{ color: "var(--text-primary)" }}>Points :</strong> Tes données. Elles sont placées dans le territoire du nœud qui les gère.</li>
+                <li><strong style={{ color: "var(--text-primary)" }}>Colors:</strong> Each color represents a node's territory.</li>
+                <li><strong style={{ color: "var(--text-primary)" }}>Points:</strong> Your data. They are placed in the territory of the node that manages them.</li>
               </ul>
             </div>
           </div>
 
           <div className="card" style={{ flex: "1 1 300px" }}>
-            <h3 style={{ margin: "0 0 1.5rem", fontSize: 16, color: "var(--text-primary)" }}>Charge par Nœud (Load Balancing)</h3>
+            <h3 style={{ margin: "0 0 1.5rem", fontSize: 16, color: "var(--text-primary)" }}>Load per Node (Load Balancing)</h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {nodes.map((n, i) => {
                 const nodeColor = `var(--node-${i % 5})`;
@@ -386,11 +386,11 @@ export default function Partitionnement({ nodes, nodesWithTokens, selectedUser, 
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.8rem", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                         <div style={{ width: 10, height: 10, borderRadius: "50%", background: nodeColor }} />
-                        <strong style={{ color: "var(--text-primary)", fontSize: 14 }}>Nœud {i + 1}</strong>
+                        <strong style={{ color: "var(--text-primary)", fontSize: 14 }}>Node {i + 1}</strong>
                         <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>({n.address})</span>
                       </div>
                       <span className="badge" style={{ background: "var(--bg-surface)", border: "1px solid var(--border-light)", color: "var(--text-secondary)" }}>
-                        {nodeKeys.length} clé(s)
+                        {nodeKeys.length} key(s)
                       </span>
                     </div>
                     <div style={{ width: "100%", height: 6, background: "var(--bg-surface)", borderRadius: 3, overflow: "hidden", border: "1px solid var(--border-light)" }}>

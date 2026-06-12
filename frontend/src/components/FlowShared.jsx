@@ -293,7 +293,7 @@ export function NodeCard({ label, sublabel, icon, isActive, isDown, isVibrating,
     <motion.div
       animate={{
         opacity: dimmed ? 0.35 : 1,
-        scale: isActive && !isDown ? (label === "Coordinateur" ? 1.15 : 1.05) : (label === "Coordinateur" ? 1.08 : 1),
+        scale: isActive && !isDown ? (label === "Coordinator" ? 1.15 : 1.05) : (label === "Coordinator" ? 1.08 : 1),
         y: isActive && !isDown ? -4 : 0,
         filter: dimmed ? "grayscale(0.6) opacity(0.7)" : "grayscale(0) opacity(1)",
       }}
@@ -301,7 +301,7 @@ export function NodeCard({ label, sublabel, icon, isActive, isDown, isVibrating,
       style={{
         position: "absolute",
         display: "flex", flexDirection: "column", alignItems: "center",
-        width: label === "Coordinateur" ? 150 : 136,
+        width: label === "Coordinator" ? 150 : 136,
         background: isActive ? (isDown ? "#fff5f5" : "#ffffff") : "#ffffff",
         border: `2px solid ${isActive ? (isDown ? "#ef4444" : statusColor) : "#e2e8f0"}`,
         borderRadius: 16,
@@ -309,11 +309,11 @@ export function NodeCard({ label, sublabel, icon, isActive, isDown, isVibrating,
           ? `0 0 0 5px ${isDown ? "#ef444415" : statusColor + "15"}, 0 10px 30px rgba(0,0,0,0.06)`
           : "0 2px 10px rgba(0,0,0,0.03)",
         animation: isVibrating ? "serverVibrate 0.15s infinite" : (isRadar ? "pulseCoord 2s infinite" : "none"),
-        zIndex: label === "Coordinateur" ? 20 : 10, cursor: "default",
+        zIndex: label === "Coordinator" ? 20 : 10, cursor: "default",
         overflow: "hidden",
         ...style,
       }}
-      whileHover={{ scale: dimmed ? 1 : (label === "Coordinateur" ? 1.18 : 1.07), y: -6 }}
+      whileHover={{ scale: dimmed ? 1 : (label === "Coordinator" ? 1.18 : 1.07), y: -6 }}
     >
       <div style={{ padding: "1rem 0.75rem 0.85rem", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
         {isRadar && (
@@ -520,10 +520,10 @@ export function buildDcsLayout(replicas, nodes, downNodes, consistency) {
 }
 
 export function getConsistencyText(consistency) {
-  if (consistency === "LOCAL_QUORUM") return "Le Coordinateur attend le quorum uniquement dans le DC local. Les réplicas distants reçoivent la donnée en arrière-plan (asynchrone).";
-  if (consistency === "EACH_QUORUM") return "Le Coordinateur attend que chaque Datacenter atteigne son propre quorum interne avant de valider.";
-  if (consistency === "LOCAL_ONE")   return "Le Coordinateur valide dès le premier ACK reçu de son propre Datacenter.";
-  if (consistency === "ALL")         return "Le Coordinateur attend les ACKs de tous les réplicas sur tous les DCs. Plus lent mais 100% sûr.";
-  if (consistency === "ONE")         return "Le Coordinateur valide dès le premier ACK reçu de n'importe quel réplica.";
-  return "Le Coordinateur attend un quorum global : majorité absolue sur l'ensemble des réplicas.";
+  if (consistency === "LOCAL_QUORUM") return "The Coordinator waits for quorum only in the local DC. Remote replicas receive data in the background (asynchronously).";
+  if (consistency === "EACH_QUORUM") return "The Coordinator waits for each Datacenter to reach its own internal quorum before validating.";
+  if (consistency === "LOCAL_ONE")   return "The Coordinator validates upon the first ACK received from its own Datacenter.";
+  if (consistency === "ALL")         return "The Coordinator waits for ACKs from all replicas across all DCs. Slower but 100% safe.";
+  if (consistency === "ONE")         return "The Coordinator validates upon the first ACK received from any replica.";
+  return "The Coordinator waits for a global quorum: absolute majority across all replicas.";
 }

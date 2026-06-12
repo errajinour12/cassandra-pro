@@ -36,7 +36,7 @@ function NodeAccordion({ nodeInfo }) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <div style={{ width: 14, height: 14, borderRadius: "50%", background: nodeColor, boxShadow: `0 0 6px ${nodeColor}80` }}></div>
-          <strong style={{ color: nodeColor, fontSize: 14, fontWeight: 700 }}>Nœud {globalIdx + 1}</strong>
+          <strong style={{ color: nodeColor, fontSize: 14, fontWeight: 700 }}>Node {globalIdx + 1}</strong>
           <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>
             {node.address} <span style={{ opacity: 0.6 }}>(DC: {node.datacenter || "dc1"})</span>
           </span>
@@ -54,13 +54,13 @@ function NodeAccordion({ nodeInfo }) {
             <thead>
               <tr style={{ borderBottom: "2px solid var(--border-light)", color: "var(--text-secondary)" }}>
                 <th style={{ padding: "0.75rem", width: "5%" }}>#</th>
-                <th style={{ padding: "0.75rem", width: "65%", textAlign: "center" }}>Plage [Début → Fin]</th>
+                <th style={{ padding: "0.75rem", width: "65%", textAlign: "center" }}>Range [Start → End]</th>
                 <th style={{ padding: "0.75rem", width: "30%", textAlign: "right" }}>Portion (%)</th>
               </tr>
             </thead>
             <tbody>
               {ranges.length === 0 ? (
-                <tr><td colSpan="3" style={{ textAlign: "center", padding: "1rem", color: "var(--text-tertiary)" }}>Aucun token assigné</td></tr>
+                <tr><td colSpan="3" style={{ textAlign: "center", padding: "1rem", color: "var(--text-tertiary)" }}>No assigned token</td></tr>
               ) : ranges.map((r, idx) => (
                 <tr key={idx} style={{ borderBottom: "1px solid var(--border-light)50" }}>
                   <td style={{ padding: "0.75rem", color: "var(--text-tertiary)", fontWeight: 600 }}>{idx + 1}</td>
@@ -151,7 +151,7 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
       svg.append("text")
         .attr("x", cx).attr("y", 17).attr("text-anchor", "middle").attr("dominant-baseline", "central")
         .attr("fill", "var(--error-color)").attr("font-size", 10).attr("font-weight", "700").attr("font-family", "Inter")
-        .text(`⚠ ${downSegs.length} nœud(s) en panne`);
+        .text(`⚠ ${downSegs.length} node(s) down`);
     }
 
     svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", r)
@@ -226,7 +226,7 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
           .attr("fill", nodeColor).style("filter", "drop-shadow(0 2px 4px rgba(0,0,0,0.2))");
         svg.append("text").attr("x", x).attr("y", y + 35)
           .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", 9).attr("font-weight", "700")
-          .attr("letter-spacing", "0.5px").attr("font-family", "Inter").text("PRIMAIRE");
+          .attr("letter-spacing", "0.5px").attr("font-family", "Inter").text("PRIMARY");
       }
     });
 
@@ -247,7 +247,7 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
         .attr("stroke", primaryColor).attr("stroke-width", 2).attr("stroke-dasharray", "3,3").attr("opacity", 0.6);
       svg.append("text").attr("x", x).attr("y", y - 16)
         .attr("text-anchor", "middle").attr("fill", "var(--text-primary)").attr("font-size", 12).attr("font-weight", "700")
-        .attr("font-family", "Inter").text("Donnée");
+        .attr("font-family", "Inter").text("Data");
     }
 
     svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", 50)
@@ -259,7 +259,7 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
     svg.append("text").attr("x", cx).attr("y", cx + 10)
       .attr("text-anchor", "middle").attr("dominant-baseline", "central")
       .attr("fill", "var(--text-tertiary)").attr("font-size", 9).attr("font-family", "Inter")
-      .text(`${dcNodes.length} nœuds`);
+      .text(`${dcNodes.length} nodes`);
 
   }, [dcNodes, dcNodesWithTokens, highlightToken, downNodes, globalIndices, palette]);
 
@@ -332,7 +332,7 @@ export default function TokenRing({ nodes, nodesWithTokens, highlightToken, down
     return (
       <div style={{ marginTop: "3rem", width: "100%", maxWidth: 1000 }}>
         <h3 style={{ margin: "0 0 1.2rem", fontSize: 15, color: "var(--text-primary)", textTransform: "uppercase", letterSpacing: "0.5px", textAlign: "center", display: "flex", justifyContent: "center", alignItems: "center", gap: "0.5rem" }}>
-          <BarChart2 size={18} /> Plages de Hachage Détaillées (VNodes)
+          <BarChart2 size={18} /> Detailed Hash Ranges (VNodes)
         </h3>
         
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -342,8 +342,8 @@ export default function TokenRing({ nodes, nodesWithTokens, highlightToken, down
         </div>
 
         <p style={{ marginTop: "1.5rem", fontSize: 13, color: "var(--text-tertiary)", lineHeight: 1.5, textAlign: "center" }}>
-          <em>* Astuce : Survolez un token pour afficher sa valeur Murmur3 complète.<br/>
-          La « Portion » représente le pourcentage exact de l'anneau de hachage global couvert par cette plage.</em>
+          <em>* Tip: Hover over a token to see its full Murmur3 value.<br/>
+          The "Portion" represents the exact percentage of the global hash ring covered by this range.</em>
         </p>
       </div>
     );
@@ -385,15 +385,15 @@ export default function TokenRing({ nodes, nodesWithTokens, highlightToken, down
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.7rem", fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
               <Database size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
-              <span>Chaque data center possède <strong>son propre anneau de hachage</strong>, indépendant des autres DC.</span>
+              <span>Each data center has <strong>its own hash ring</strong>, independent of other DCs.</span>
             </li>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
               <MapPin size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
-              <span>Le point indique où la donnée atterrit <strong>dans chaque DC</strong>. Le nœud marqué <em>PRIMAIRE</em> en est responsable localement.</span>
+              <span>The point indicates where data lands <strong>in each DC</strong>. The node marked <em>PRIMARY</em> is responsible for it locally.</span>
             </li>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
               <Zap size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
-              <span>La réplication inter-DC se fait via le réseau WAN — chaque DC reçoit sa propre copie.</span>
+              <span>Inter-DC replication is done via the WAN network — each DC receives its own copy.</span>
             </li>
           </ul>
         </div>
@@ -462,7 +462,7 @@ function SingleRing({ nodes, nodesWithTokens, highlightToken, downNodes }) {
         .attr("fill", "var(--error-bg)").attr("stroke", "var(--error-color)").attr("stroke-width", 1);
       svg.append("text").attr("x", cx).attr("y", 19).attr("text-anchor", "middle").attr("dominant-baseline", "central")
         .attr("fill", "var(--error-color)").attr("font-size", 11).attr("font-weight", "700").attr("font-family", "Inter")
-        .text(`⚠ ${downSegments.length} nœud(s) en panne sur cet anneau`);
+        .text(`⚠ ${downSegments.length} node(s) down on this ring`);
     }
 
     logicalSegments.forEach((seg) => {
@@ -531,7 +531,7 @@ function SingleRing({ nodes, nodesWithTokens, highlightToken, downNodes }) {
           .attr("fill", nodeColor).style("filter", "drop-shadow(0 2px 4px rgba(0,0,0,0.2))");
         svg.append("text").attr("x", x).attr("y", y + 37)
           .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", 10).attr("font-weight", "700")
-          .attr("letter-spacing", "0.5px").attr("font-family", "Inter").text("PRIMAIRE");
+          .attr("letter-spacing", "0.5px").attr("font-family", "Inter").text("PRIMARY");
       }
     });
 
@@ -550,7 +550,7 @@ function SingleRing({ nodes, nodesWithTokens, highlightToken, downNodes }) {
         .attr("stroke", getNodeColor(primaryNodeIdx)).attr("stroke-width", 2).attr("stroke-dasharray", "3,3").attr("opacity", 0.6);
       svg.append("text").attr("x", x).attr("y", y - 16)
         .attr("text-anchor", "middle").attr("fill", "var(--text-primary)").attr("font-size", 13).attr("font-weight", "700")
-        .attr("font-family", "Inter").text("Donnée");
+        .attr("font-family", "Inter").text("Data");
     }
 
     svg.append("circle").attr("cx", cx).attr("cy", cy).attr("r", 55)
@@ -568,15 +568,15 @@ function SingleRing({ nodes, nodesWithTokens, highlightToken, downNodes }) {
         <svg ref={svgRef} width={400} height={400} style={{ overflow: "visible" }} />
       </div>
       <div style={{ maxWidth: 300, background: "var(--bg-app)", padding: "1.2rem", borderRadius: "var(--radius-md)", border: "1px solid var(--border-light)" }}>
-        <h4 style={{ margin: "0 0 0.8rem", color: "var(--text-primary)", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.5px" }}>L'anneau de hachage</h4>
+        <h4 style={{ margin: "0 0 0.8rem", color: "var(--text-primary)", fontSize: 13, textTransform: "uppercase", letterSpacing: "0.5px" }}>The hash ring</h4>
         <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.8rem", fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5 }}>
           <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
             <CircleDashed size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
-            <span>Pour plus de clarté, l'anneau est divisé en <strong>{nodes.length} parts égales</strong> (une par nœud physique).</span>
+            <span>For clarity, the ring is divided into <strong>{nodes.length} equal parts</strong> (one per physical node).</span>
           </li>
           <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
             <MapPin size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
-            <span>Le point indique l'emplacement de ta donnée. Elle tombe naturellement dans la portion gérée par son <strong>Nœud Primaire</strong>.</span>
+            <span>The point indicates the location of your data. It naturally falls into the portion managed by its <strong>Primary Node</strong>.</span>
           </li>
         </ul>
       </div>

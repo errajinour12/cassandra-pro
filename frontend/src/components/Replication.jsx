@@ -9,7 +9,7 @@ function getDcColor(dc) {
   return DC_COLORS[dc] || DC_COLORS.dc1;
 }
 
-/** Calcule le nœud primaire et les replicas à partir des tokens — pour SimpleStrategy (global) */
+/** Calculates the primary node and replicas from tokens — for SimpleStrategy (global) */
 function computeReplicas(nodesWithTokens, selectedUser, rf, nodes) {
   if (!selectedUser || nodesWithTokens.length === 0) return { primaryNodeIdx: 0, replicaIdxs: [] };
   const allTokens = [];
@@ -35,7 +35,7 @@ function computeReplicas(nodesWithTokens, selectedUser, rf, nodes) {
   return { primaryNodeIdx: primaryIdx, replicaIdxs };
 }
 
-/** Calcule les répliques pour UN DC (NTS) — renvoie { primaryLocalIdx, replicaLocalIdxs } */
+/** Calculates replicas for ONE DC (NTS) — returns { primaryLocalIdx, replicaLocalIdxs } */
 function computeDcReplicas(dcNodesWithTokens, selectedUser, dcRf, dcNodeCount) {
   if (!selectedUser || !dcNodesWithTokens.length) return { primaryLocalIdx: 0, replicaLocalIdxs: [] };
   const allTokens = [];
@@ -81,19 +81,19 @@ function NodeCard({ n, i, isPrimary, isReplica, isDown, isSimDown, isReallyDown,
         </div>
       </div>
       <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "monospace", marginBottom: "0.75rem", overflow: "hidden", textOverflow: "ellipsis" }}>{n.address}</div>
-      {isReallyDown ? <span className="badge badge-error">PANNE RÉELLE</span>
-        : isSimDown ? <span className="badge badge-error">PANNE SIMULÉE</span>
+      {isReallyDown ? <span className="badge badge-error">REAL DOWN</span>
+        : isSimDown ? <span className="badge badge-error">SIMULATED DOWN</span>
         : hasData ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", alignItems: "center" }}>
             <span className="badge" style={{ background: isPrimary ? nodeColor : "var(--bg-surface)", color: isPrimary ? "white" : nodeColor, border: `1px solid ${nodeColor}` }}>
-              {isPrimary ? <><Star size={12} style={{marginRight:4}}/> PRIMAIRE</> : <><RefreshCw size={12} style={{marginRight:4}}/> RÉPLIQUE</>}
+              {isPrimary ? <><Star size={12} style={{marginRight:4}}/> PRIMARY</> : <><RefreshCw size={12} style={{marginRight:4}}/> REPLICA</>}
             </span>
             <div style={{ fontSize: 10, color: "var(--text-secondary)", background: "var(--bg-app)", padding: "2px 6px", borderRadius: 4 }}>
               {selectedUser?.user_id}
             </div>
           </div>
         ) : (
-          <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Vide pour cette clé</div>
+          <div style={{ fontSize: 11, color: "var(--text-tertiary)" }}>Empty for this key</div>
         )}
     </div>
   );
@@ -129,22 +129,22 @@ export default function Replication({ nodes, nodesWithTokens, selectedUser, rf, 
   return (
     <div>
       <div className="card" style={{ marginBottom: "2rem" }}>
-        <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)", fontSize: "1.5rem" }}>Réplication</h2>
+        <h2 style={{ margin: "0 0 0.5rem", color: "var(--text-primary)", fontSize: "1.5rem" }}>Replication</h2>
         <p style={{ margin: "0 0 1.5rem", color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.6 }}>
           {isNts
-            ? <>En <strong>NetworkTopologyStrategy</strong>, chaque datacenter a son propre Replication Factor. Les réplicas restent dans leur DC respectif, assurant la <strong>tolérance géographique</strong>.</>
-            : <>En <strong>SimpleStrategy</strong>, Cassandra place les réplicas sur les nœuds consécutifs de l'anneau. RF actuel : <strong>{rf}</strong> pour <strong style={{ color: "var(--primary-color)" }}>{selectedUser.user_id}</strong>.</>
+            ? <>In <strong>NetworkTopologyStrategy</strong>, each datacenter has its own Replication Factor. Replicas stay in their respective DC, ensuring <strong>geographical tolerance</strong>.</>
+            : <>In <strong>SimpleStrategy</strong>, Cassandra places replicas on consecutive nodes in the ring. Current RF: <strong>{rf}</strong> for <strong style={{ color: "var(--primary-color)" }}>{selectedUser.user_id}</strong>.</>
           }
         </p>
 
         {downNodes.size > 0 && (
           <div style={{ padding: "0.75rem 1rem", background: "var(--warning-bg)", borderLeft: "4px solid var(--warning-color)", borderRadius: "var(--radius-md)", color: "#92400e", marginBottom: "1.5rem", fontSize: 13 }}>
-            <AlertTriangle size={14} style={{marginRight:4}}/> <strong>{downNodes.size} panne(s) simulée(s)</strong> reflétées ici.
+            <AlertTriangle size={14} style={{marginRight:4}}/> <strong>{downNodes.size} simulated failure(s)</strong> reflected here.
           </div>
         )}
 
         {nodes.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-tertiary)" }}>En attente des nœuds...</div>
+          <div style={{ textAlign: "center", padding: "4rem", color: "var(--text-tertiary)" }}>Waiting for nodes...</div>
         ) : isNts ? (
           /* ── Vue NTS : un groupe par DC avec répliques calculées par DC ── */
           <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", justifyContent: "center", marginBottom: "2rem" }}>
@@ -192,17 +192,17 @@ export default function Replication({ nodes, nodesWithTokens, selectedUser, rf, 
 
         {/* Résumé */}
         <div style={{ background: "var(--primary-light)", borderRadius: "var(--radius-lg)", padding: "1.25rem", border: "1px solid rgba(59, 130, 246, 0.2)" }}>
-          <div style={{ fontWeight: 600, color: "var(--primary-hover)", marginBottom: 6, fontSize: 14 }}>📊 Résumé de la distribution</div>
+          <div style={{ fontWeight: 600, color: "var(--primary-hover)", marginBottom: 6, fontSize: 14 }}>📊 Distribution Summary</div>
           <div style={{ color: "var(--text-primary)", fontSize: 14, lineHeight: 1.6 }}>
             {isNts ? (
-              <>La donnée <strong>{selectedUser.user_id}</strong> est répliquée dans chaque datacenter selon son RF propre.
+              <>The data <strong>{selectedUser.user_id}</strong> is replicated in each datacenter according to its own RF.
                 {Object.entries(rfPerDc || {}).map(([dc, r]) => (
-                  <span key={dc}> — <strong style={{ color: getDcColor(dc).primary }}>{dc.toUpperCase()}</strong> : {r} copie(s)</span>
+                  <span key={dc}> — <strong style={{ color: getDcColor(dc).primary }}>{dc.toUpperCase()}</strong> : {r} copy(ies)</span>
                 ))}.
               </>
             ) : (
-              <>La donnée <strong>{selectedUser.user_id}</strong> est stockée sur <strong>{actualRf} nœud(s)</strong> : le Nœud {primaryNodeIdx + 1} (Primaire) + {actualRf - 1} réplique(s).
-                {rf > nodes.length && <span style={{ color: "var(--error-color)", display: "block", marginTop: 4 }}><AlertTriangle size={14} style={{marginRight:4}}/> RF ({rf}) &gt; nombre de nœuds ({nodes.length}). Cassandra ne peut faire que {nodes.length} copies.</span>}
+              <>The data <strong>{selectedUser.user_id}</strong> is stored on <strong>{actualRf} node(s)</strong>: Node {primaryNodeIdx + 1} (Primary) + {actualRf - 1} replica(s).
+                {rf > nodes.length && <span style={{ color: "var(--error-color)", display: "block", marginTop: 4 }}><AlertTriangle size={14} style={{marginRight:4}}/> RF ({rf}) &gt; number of nodes ({nodes.length}). Cassandra can only make {nodes.length} copies.</span>}
               </>
             )}
           </div>

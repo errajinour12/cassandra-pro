@@ -210,11 +210,11 @@ export default function Architecture({ nodes, strategy, downNodes = new Set() })
         <div style={{ position: "absolute", bottom: "1.5rem", left: "1.5rem", background: "white", padding: "0.75rem 1rem", borderRadius: "8px", border: "1px solid #e2e8f0", display: "flex", gap: "1rem", boxShadow: "0 4px 6px rgba(0,0,0,0.05)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", fontWeight: 600, color: "#64748b" }}>
             <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 6px #10b981" }} />
-            Traffic Local (Gossip)
+            Local Traffic (Gossip)
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", fontWeight: 600, color: "#64748b" }}>
             <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#8b5cf6", boxShadow: "0 0 6px #8b5cf6" }} />
-            Traffic Inter-DC (WAN)
+            Inter-DC Traffic (WAN)
           </div>
         </div>
       </div>
@@ -224,22 +224,22 @@ export default function Architecture({ nodes, strategy, downNodes = new Set() })
         <div className="card" style={{ padding: "1.5rem" }}>
           <h3 style={{ margin: "0 0 1rem", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
             <Globe size={20} color="var(--primary-color)" />
-            Topologie du Cluster
+            Cluster Topology
           </h3>
           <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: "0 0 1rem" }}>
-            Cassandra utilise une architecture <strong>Masterless</strong> (P2P). Tous les nœuds sont égaux. Il n'y a pas de nœud central "Maître" qui peut tomber en panne.
+            Cassandra uses a <strong>Masterless</strong> (P2P) architecture. All nodes are equal. There is no central "Master" node that can fail.
           </p>
           <ul style={{ padding: 0, margin: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-              <strong style={{ color: "var(--text-primary)" }}>Stratégie :</strong>
+              <strong style={{ color: "var(--text-primary)" }}>Strategy:</strong>
               <span className="badge badge-neutral" style={{ marginLeft: "auto" }}>{strategy.toUpperCase()}</span>
             </li>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-              <strong style={{ color: "var(--text-primary)" }}>Datacenters :</strong>
+              <strong style={{ color: "var(--text-primary)" }}>Datacenters:</strong>
               <span className="badge badge-neutral" style={{ marginLeft: "auto" }}>{dcNames.length}</span>
             </li>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-              <strong style={{ color: "var(--text-primary)" }}>Total Nœuds :</strong>
+              <strong style={{ color: "var(--text-primary)" }}>Total Nodes:</strong>
               <span className="badge badge-neutral" style={{ marginLeft: "auto" }}>{nodes.length}</span>
             </li>
           </ul>
@@ -248,24 +248,24 @@ export default function Architecture({ nodes, strategy, downNodes = new Set() })
         <div className="card" style={{ padding: "1.5rem", background: "var(--primary-light)", border: "1px solid var(--primary-border)" }}>
           <h3 style={{ margin: "0 0 1rem", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--primary-hover)" }}>
             <Activity size={20} />
-            Protocole Gossip
+            Gossip Protocol
           </h3>
           <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
-            Les impulsions que vous voyez voyager entre les nœuds représentent le protocole <strong>Gossip</strong>. 
-            Toutes les secondes, chaque nœud discute avec 1 à 3 autres nœuds aléatoires pour échanger des informations sur l'état du cluster (qui est en ligne, qui est mort, état de la charge).
+            The pulses you see traveling between nodes represent the <strong>Gossip</strong> protocol. 
+            Every second, each node chats with 1 to 3 other random nodes to exchange information about the cluster's state (who is online, who is dead, load state).
           </p>
         </div>
 
         <div className="card" style={{ padding: "1.5rem" }}>
           <h3 style={{ margin: "0 0 1rem", fontSize: "1.1rem", display: "flex", alignItems: "center", gap: "0.5rem", color: "var(--text-primary)" }}>
             <ShieldAlert size={20} color="#ef4444" />
-            Tolérance aux Pannes
+            Fault Tolerance
           </h3>
           <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
             {strategy === "nts" ? (
-              "Le réseau est conçu pour survivre à des partitions géographiques. Si un lien WAN est coupé entre deux datacenters, les nœuds locaux continuent de servir les requêtes. Une fois la connexion rétablie, les données se synchronisent automatiquement (Hinted Handoff / Repair)."
+              "The network is designed to survive geographical partitions. If a WAN link is cut between two datacenters, local nodes continue to serve requests. Once the connection is restored, data automatically synchronizes (Hinted Handoff / Repair)."
             ) : (
-              "Le cluster peut survivre à la perte de plusieurs nœuds simultanément sans aucune perte de données. Tant que le niveau de consistance (ex: QUORUM) est respecté par les réplicas encore en ligne, le système continuera de fonctionner normalement."
+              "The cluster can survive the loss of several nodes simultaneously without any data loss. As long as the consistency level (e.g., QUORUM) is met by the replicas still online, the system will continue to function normally."
             )}
           </p>
         </div>
@@ -303,7 +303,7 @@ function NodeCard({ node }) {
       </div>
 
       <div style={{ fontSize: "0.85rem", fontWeight: 800, color: node.isDown ? "#991b1b" : "#1e293b", marginBottom: "2px" }}>
-        Nœud {node.globalIdx + 1}
+        Node {node.globalIdx + 1}
       </div>
       <div style={{ fontSize: "0.65rem", color: "#64748b", fontFamily: "monospace", fontWeight: 600 }}>
         {node.address}
@@ -312,11 +312,11 @@ function NodeCard({ node }) {
       {/* Hardware LEDs (Only if UP) */}
       {!node.isDown && (
         <div style={{ display: "flex", gap: "8px", marginTop: "10px", paddingTop: "8px", borderTop: "1px solid #f1f5f9", width: "100%", justifyContent: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "3px" }} title="Activité CPU">
+          <div style={{ display: "flex", alignItems: "center", gap: "3px" }} title="CPU Activity">
             <Cpu size={10} color="#94a3b8" />
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", animation: "ledPulse 1.5s ease-in-out infinite" }} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "3px" }} title="Activité Réseau">
+          <div style={{ display: "flex", alignItems: "center", gap: "3px" }} title="Network Activity">
             <Activity size={10} color="#94a3b8" />
             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6", animation: "ledPulse 0.8s ease-in-out infinite 0.3s" }} />
           </div>

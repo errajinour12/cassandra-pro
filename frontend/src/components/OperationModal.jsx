@@ -2,9 +2,9 @@ import { useState } from "react";
 import { Trash2, Edit2, AlertTriangle } from "lucide-react";
 
 /**
- * OperationModal — modal réutilisable pour :
- *  - type="edit"    → formulaire de modification
- *  - type="delete"  → confirmation de suppression
+ * OperationModal — reusable modal for:
+ *  - type="edit"    → edit form
+ *  - type="delete"  → delete confirmation
  */
 export default function OperationModal({ type, user, onConfirm, onCancel, loading, error }) {
   const [name, setName] = useState(user?.name || "");
@@ -45,16 +45,16 @@ export default function OperationModal({ type, user, onConfirm, onCancel, loadin
               {isDelete ? <Trash2 size={24} color="var(--error-color)" /> : <Edit2 size={24} color="var(--primary-color)" />}
             </div>
             <h3 style={{ margin: 0, color: isDelete ? "var(--error-color)" : "var(--text-primary)", fontSize: "1.2rem" }}>
-              {isDelete ? "Supprimer l'enregistrement" : "Modifier l'enregistrement"}
+              {isDelete ? "Delete Record" : "Edit Record"}
             </h3>
             <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>
-              Clé primaire : <strong style={{ fontFamily: "monospace", color: "var(--primary-color)" }}>{user?.user_id}</strong>
+              Primary Key: <strong style={{ fontFamily: "monospace", color: "var(--primary-color)" }}>{user?.user_id}</strong>
             </div>
           </div>
           <button onClick={onCancel} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-tertiary)", fontSize: 20, padding: "0.25rem" }}>×</button>
         </div>
 
-        {/* ✅ Erreur de consistance (UnavailableException simulée) */}
+        {/* ✅ Consistency error (simulated UnavailableException) */}
         {error && (
           <div style={{
             background: "var(--error-bg)",
@@ -74,37 +74,37 @@ export default function OperationModal({ type, user, onConfirm, onCancel, loadin
           </div>
         )}
 
-        {/* Contenu */}
+        {/* Content */}
         {isDelete ? (
           <div style={{ background: "var(--error-bg)", borderRadius: "var(--radius-md)", padding: "1rem 1.25rem", marginBottom: "1.5rem", border: "1px solid #fca5a5", fontSize: 14, color: "#991b1b", lineHeight: 1.6, display: "flex", gap: "0.6rem", alignItems: "flex-start" }}>
             <AlertTriangle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
-              Cette action est <strong>irréversible</strong>. La donnée <strong>«{user?.user_id}»</strong> sera supprimée de tous les nœuds réplicas.
+              This action is <strong>irreversible</strong>. The data <strong>"{user?.user_id}"</strong> will be deleted from all replica nodes.
             </div>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
             <div>
-              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 4 }}>Nom</label>
-              <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="Nouveau nom" />
+              <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 4 }}>Name</label>
+              <input className="input-field" value={name} onChange={e => setName(e.target.value)} placeholder="New name" />
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: 4 }}>Email</label>
-              <input className="input-field" value={email} onChange={e => setEmail(e.target.value)} placeholder="Nouveau email" />
+              <input className="input-field" value={email} onChange={e => setEmail(e.target.value)} placeholder="New email" />
             </div>
           </div>
         )}
 
         {/* Actions */}
         <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-          <button onClick={onCancel} className="btn btn-outline">Annuler</button>
+          <button onClick={onCancel} className="btn btn-outline">Cancel</button>
           <button
             onClick={() => isDelete ? onConfirm() : onConfirm({ name, email })}
             disabled={loading || (!isDelete && !name)}
             className="btn"
             style={{ background: isDelete ? "var(--error-color)" : "var(--primary-color)", color: "white", opacity: loading ? 0.7 : 1 }}
           >
-            {loading ? "..." : isDelete ? "Supprimer définitivement" : "Enregistrer les modifications"}
+            {loading ? "..." : isDelete ? "Delete Permanently" : "Save Changes"}
           </button>
         </div>
 

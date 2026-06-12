@@ -6,13 +6,13 @@ import {
   getReplicas, buildDcsLayout, getConsistencyText
 } from "./FlowShared";
 
-const STEP_LABELS = ["Prêt", "Partitionnement", "Réplication", "Stockage", "Quorum", "Résultat"];
+const STEP_LABELS = ["Ready", "Partitioning", "Replication", "Storage", "Quorum", "Result"];
 
 const STEP_DESCRIPTIONS = [
-  "Le client est prêt à envoyer une nouvelle donnée. Il peut se connecter à n'importe quel nœud du cluster, qui agira alors comme Coordinateur pour cette requête.",
-  "Le Coordinateur reçoit la donnée et hache la clé primaire via Murmur3 pour obtenir un Token. Ce Token détermine exactement quels nœuds sont responsables de la donnée.",
-  "Le Coordinateur envoie en parallèle la donnée aux réplicas responsables dans chaque Datacenter. Les réplicas distants reçoivent la donnée via une liaison inter-DC.",
-  "Sur CHAQUE réplica actif : 1) La donnée est d'abord écrite dans le Commit Log (durabilité sur disque). 2) Elle est ensuite ajoutée à la Memtable (accès rapide en RAM).",
+  "The client is ready to send new data. It can connect to any node in the cluster, which will then act as the Coordinator for this request.",
+  "The Coordinator receives the data and hashes the primary key via Murmur3 to get a Token. This Token determines exactly which nodes are responsible for the data.",
+  "The Coordinator sends the data in parallel to the responsible replicas in each Datacenter. Distant replicas receive the data via an inter-DC link.",
+  "On EACH active replica: 1) The data is first written to the Commit Log (disk durability). 2) It is then added to the Memtable (fast RAM access).",
   null, // Dynamic consistency text
   null, // Dynamic success/fail text
 ];
@@ -48,8 +48,8 @@ export default function WritePath({ selectedUser, updatedUser, nodes, nodesWithT
     ? getConsistencyText(consistency)
     : step === 5
       ? (isGlobalSuccess
-        ? `✅ L'écriture est un SUCCÈS. Le Coordinateur a reçu suffisamment d'ACKs selon le niveau de consistance "${consistency}".`
-        : `❌ L'écriture a ÉCHOUÉ. Trop de réplicas sont hors ligne pour satisfaire le niveau de consistance "${consistency}".`)
+        ? `✅ Write SUCCESS. The Coordinator received enough ACKs according to consistency level "${consistency}".`
+        : `❌ Write FAILED. Too many replicas are offline to satisfy consistency level "${consistency}".`)
       : STEP_DESCRIPTIONS[step];
 
   const CLIENT_POS  = { x: 0.07, y: 0.5 };
@@ -87,9 +87,9 @@ export default function WritePath({ selectedUser, updatedUser, nodes, nodesWithT
           </motion.div>
         </AnimatePresence>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", flexShrink: 0 }}>
-          <button className="btn btn-outline" onClick={prevStep} disabled={step === 0} style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>◀ Préc.</button>
+          <button className="btn btn-outline" onClick={prevStep} disabled={step === 0} style={{ padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>◀ Prev</button>
           <button className="btn" onClick={nextStep} disabled={step === 5}
-            style={{ background: ACCENT, color: "white", border: "none", padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>Suiv. ▶</button>
+            style={{ background: ACCENT, color: "white", border: "none", padding: "0.45rem 0.9rem", fontSize: "0.82rem" }}>Next ▶</button>
         </div>
       </div>
 
@@ -119,8 +119,8 @@ export default function WritePath({ selectedUser, updatedUser, nodes, nodesWithT
 
         {/* ── Coordinator node ── */}
         <NodeCard
-          label="Coordinateur"
-          sublabel="Nœud Entrant"
+          label="Coordinator"
+          sublabel="Entry Node"
           icon={<Settings size={22} />}
           isActive={step >= 1 && step < 5}
           isRadar={step === 1 || step === 4}
@@ -140,7 +140,7 @@ export default function WritePath({ selectedUser, updatedUser, nodes, nodesWithT
             return (
               <NodeCard
                 key={rp.nodeIdx}
-                label={`Nœud ${rp.nodeIdx + 1}`}
+                label={`Node ${rp.nodeIdx + 1}`}
                 sublabel={`DC: ${dc.name}`}
                 icon={rp.isDown ? <Flame size={22} /> : <Server size={22} />}
                 isActive={step >= 2 && !rp.isDown}
@@ -149,7 +149,7 @@ export default function WritePath({ selectedUser, updatedUser, nodes, nodesWithT
                 dimmed={step < 2 && !rp.isDown}
                 statusColor={rp.isDown ? "#ef4444" : ACCENT}
                 style={{ left: `${rp.x * 100}%`, top: `${rp.y * 100}%`, transform: "translate(-50%, -50%)" }}
-                badge={rp.isDown ? "DOWN" : (hasWritten ? "✓ Écrit" : null)}
+                badge={rp.isDown ? "DOWN" : (hasWritten ? "✓ Written" : null)}
                 badgeColor={rp.isDown ? "#ef4444" : ACK_COLOR}
                 leds={!rp.isDown ? { disk: hasWritten, ram: hasWritten, blink: isWritingNow } : null}
               />

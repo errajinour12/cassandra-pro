@@ -6,15 +6,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from cassandra_client import connect, get_session, get_cluster
 
-# ── CORS — origines autorisées via variable d'environnement ──────────────────
+# ── CORS — allowed origins via environment variable ──────────────────
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
-# ── Lifespan (remplace @app.on_event("startup"), déprécié depuis FastAPI 0.93)
+# ── Lifespan (replaces @app.on_event("startup"), deprecated since FastAPI 0.93)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    connect()          # démarrage : connexion Cassandra avec retry
+    connect()          # startup: Cassandra connection with retry
     yield
-    # (optionnel) cluster.shutdown() ici si besoin de cleanup
+    # (optional) cluster.shutdown() here if cleanup is needed
 
 
 app = FastAPI(lifespan=lifespan)
@@ -70,7 +70,7 @@ def get_datacenters():
 class StrategyConfig(BaseModel):
     strategy: str           # "simple" | "nts"
     replication_factor: int = 3
-    dc_options: dict = {}   # {"dc1": 3, "dc2": 3}  — NTS uniquement
+    dc_options: dict = {}   # {"dc1": 3, "dc2": 3}  — NTS only
 
 
 @app.post("/cluster/strategy")
@@ -81,19 +81,19 @@ def change_strategy(config: StrategyConfig):
         label = f"SimpleStrategy (RF={config.replication_factor})"
     else:
         if not config.dc_options:
-            raise HTTPException(status_code=400, detail="dc_options est requis pour NetworkTopologyStrategy")
+            raise HTTPException(status_code=400, detail="dc_options is required for NetworkTopologyStrategy")
         alter_strategy_nts(config.dc_options)
         dc_detail = ", ".join([f"{k}={v}" for k, v in config.dc_options.items()])
         label = f"NetworkTopologyStrategy ({dc_detail})"
 
-    # Réinitialise les données pour ne pas mélanger les simulations
+    # Reset data to avoid mixing simulations
     session = get_session()
     session.execute("TRUNCATE users")
 
-    return {"message": f"Stratégie changée en {label}. Les données ont été réinitialisées."}
+    return {"message": f"Strategy changed to {label}. Data has been reset."}
 
 
-# ── Données ──────────────────────────────────────────────────────────────────
+# ── Data ──────────────────────────────────────────────────────────────────
 
 @app.get("/data/all")
 def get_all_users():
@@ -105,7 +105,7 @@ def get_all_users():
     ]}
 
 
-# ── Modèles pour les requêtes body JSON ──────────────────────────────────────
+# ── Models for JSON body requests ──────────────────────────────────────
 
 class UserInsert(BaseModel):
     user_id: str
@@ -125,14 +125,14 @@ def insert_user(user: UserInsert):
     name = user.name
     email = user.email or f"{user_id}@example.com"
 
-    # ── Vérification doublon ──
+    # ── Duplicate check ──
     existing = session.execute(
         "SELECT user_id FROM users WHERE user_id = %s", (user_id,)
     ).one()
     if existing:
         raise HTTPException(
             status_code=409,
-            detail=f"L'identifiant «{user_id}» existe déjà dans la base. Choisissez un autre ID ou utilisez la fonction Modifier."
+            detail=f"The ID '{user_id}' already exists in the database. Choose another ID or use the Update function."
         )
 
     session.execute(
@@ -142,7 +142,7 @@ def insert_user(user: UserInsert):
     row = session.execute(
         "SELECT token(user_id) FROM users WHERE user_id = %s", (user_id,)
     ).one()
-    return {"user_id": user_id, "token": str(row[0]), "message": "Inséré avec succès"}
+    return {"user_id": user_id, "token": str(row[0]), "message": "Inserted successfully"}
 
 
 @app.put("/data/update/{user_id}")
@@ -152,7 +152,7 @@ def update_user(user_id: str, body: UserUpdate):
         "SELECT user_id, name, email FROM users WHERE user_id = %s", (user_id,)
     ).one()
     if not existing:
-        raise HTTPException(status_code=404, detail=f"L'utilisateur «{user_id}» n'existe pas.")
+        raise HTTPException(status_code=404, detail=f"User '{user_id}' does not exist.")
 
     new_name  = body.name  if body.name  else existing.name
     new_email = body.email if body.email else existing.email
@@ -161,7 +161,7 @@ def update_user(user_id: str, body: UserUpdate):
         "UPDATE users SET name = %s, email = %s WHERE user_id = %s",
         (new_name, new_email, user_id)
     )
-    return {"user_id": user_id, "name": new_name, "email": new_email, "message": "Mis à jour avec succès"}
+    return {"user_id": user_id, "name": new_name, "email": new_email, "message": "Updated successfully"}
 
 
 @app.delete("/data/delete/{user_id}")
@@ -171,10 +171,10 @@ def delete_user(user_id: str):
         "SELECT user_id FROM users WHERE user_id = %s", (user_id,)
     ).one()
     if not existing:
-        raise HTTPException(status_code=404, detail=f"L'utilisateur «{user_id}» n'existe pas.")
+        raise HTTPException(status_code=404, detail=f"User '{user_id}' does not exist.")
 
     session.execute("DELETE FROM users WHERE user_id = %s", (user_id,))
-    return {"message": f"«{user_id}» supprimé avec succès"}
+    return {"message": f"'{user_id}' deleted successfully"}
 
 
 @app.get("/data/partition/{user_id}")
@@ -185,5 +185,5 @@ def get_partition_info(user_id: str):
         (user_id,)
     ).one()
     if not row:
-        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        raise HTTPException(status_code=404, detail="User not found")
     return {"user_id": row.user_id, "name": row.name, "email": row.email, "token": str(row[0])}

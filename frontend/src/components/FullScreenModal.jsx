@@ -10,7 +10,7 @@ export default function FullScreenModal({ children, onClose }) {
   return (
     <div className="fs-modal-overlay" onClick={onClose}>
       <div className="fs-modal-content" onClick={handleContentClick}>
-        <button className="fs-modal-close" onClick={onClose} aria-label="Fermer">
+        <button className="fs-modal-close" onClick={onClose} aria-label="Close">
           <X size={28} />
         </button>
         <div className="fs-modal-body">

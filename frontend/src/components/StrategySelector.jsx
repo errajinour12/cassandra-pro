@@ -37,7 +37,7 @@ function SimpleRingPreview() {
       })}
       {/* Centre */}
       <circle cx={cx} cy={cy} r={22} fill="var(--bg-surface)" stroke="var(--border-light)" strokeWidth="1.5" />
-      <text x={cx} y={cy + 5} textAnchor="middle" fontSize="10" fill="var(--primary-color)" fontWeight="600">Anneau</text>
+      <text x={cx} y={cy + 5} textAnchor="middle" fontSize="10" fill="var(--primary-color)" fontWeight="600">Ring</text>
     </svg>
   );
 }
@@ -122,7 +122,7 @@ export default function StrategySelector({ onSelect }) {
           <span style={{ color: "var(--primary-color)" }}>Sim</span>Cassandra
         </h1>
         <p style={{ margin: "0.75rem 0 0", color: "var(--text-secondary)", fontSize: 16, maxWidth: 500 }}>
-          Choisissez une <strong style={{ color: "var(--text-primary)" }}>stratégie de réplication</strong> pour démarrer la simulation visuelle
+          Choose a <strong style={{ color: "var(--text-primary)" }}>replication strategy</strong> to start the visual simulation
         </p>
       </div>
 
@@ -149,7 +149,7 @@ export default function StrategySelector({ onSelect }) {
             </div>
             <div>
               <div style={{ fontSize: "clamp(14px, 2vh, 17px)", fontWeight: 700, color: "var(--text-primary)" }}>SimpleStrategy</div>
-              <div style={{ fontSize: "clamp(11px, 1.4vh, 13px)", color: "var(--text-secondary)", marginTop: 2 }}>Cluster homogène — anneau unique</div>
+              <div style={{ fontSize: "clamp(11px, 1.4vh, 13px)", color: "var(--text-secondary)", marginTop: 2 }}>Homogeneous cluster — single ring</div>
             </div>
           </div>
 
@@ -160,7 +160,7 @@ export default function StrategySelector({ onSelect }) {
 
           {/* Description */}
           <div style={{ fontSize: "clamp(11px, 1.5vh, 13px)", color: "var(--text-secondary)", lineHeight: 1.65, background: "var(--bg-app)", borderRadius: 10, padding: "0.7rem 1rem", border: "1px solid var(--border-light)", flexShrink: 0 }}>
-            Les réplicas sont placés sur les <strong style={{ color: "var(--text-primary)" }}>nœuds consécutifs</strong> de l'anneau. Idéal pour un datacenter unique. Simple à configurer.
+            Replicas are placed on <strong style={{ color: "var(--text-primary)" }}>consecutive nodes</strong> of the ring. Ideal for a single datacenter. Simple to configure.
           </div>
 
           {/* RF */}
@@ -171,7 +171,7 @@ export default function StrategySelector({ onSelect }) {
             onClick={() => launch("simple")} disabled={loading !== null}
             style={{ flexShrink: 0, width: "100%", padding: "clamp(0.6rem, 1.3vh, 0.85rem)", borderRadius: 12, background: loading === "simple" ? "var(--text-tertiary)" : "var(--primary-color)", border: "none", color: "white", fontWeight: 700, fontSize: "clamp(13px, 1.6vh, 15px)", cursor: loading !== null ? "not-allowed" : "pointer", transition: "all 0.2s", boxShadow: loading === "simple" ? "none" : "0 4px 14px rgba(59, 130, 246, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
-            {loading === "simple" ? <><Loader2 size={16} /> Connexion...</> : <><Play size={16} /> Simuler SimpleStrategy</>}
+            {loading === "simple" ? <><Loader2 size={16} /> Connecting...</> : <><Play size={16} /> Simulate SimpleStrategy</>}
           </button>
         </div>
 
@@ -191,7 +191,7 @@ export default function StrategySelector({ onSelect }) {
             </div>
             <div>
               <div style={{ fontSize: "clamp(14px, 2vh, 17px)", fontWeight: 700, color: "var(--text-primary)" }}>NetworkTopologyStrategy</div>
-              <div style={{ fontSize: "clamp(11px, 1.4vh, 13px)", color: "var(--text-secondary)", marginTop: 2 }}>Multi-datacenter — tolérance géographique</div>
+              <div style={{ fontSize: "clamp(11px, 1.4vh, 13px)", color: "var(--text-secondary)", marginTop: 2 }}>Multi-datacenter — geographical tolerance</div>
             </div>
           </div>
 
@@ -202,13 +202,13 @@ export default function StrategySelector({ onSelect }) {
 
           {/* Description */}
           <div style={{ fontSize: "clamp(11px, 1.5vh, 13px)", color: "var(--text-secondary)", lineHeight: 1.65, background: "var(--bg-app)", borderRadius: 10, padding: "0.7rem 1rem", border: "1px solid var(--border-light)", flexShrink: 0 }}>
-            Chaque datacenter a <strong style={{ color: "var(--text-primary)" }}>son propre RF</strong>. Survit à la panne totale d'un datacenter. Recommandé en production.
+            Each datacenter has <strong style={{ color: "var(--text-primary)" }}>its own RF</strong>. Survives the total failure of a datacenter. Recommended in production.
           </div>
 
           {/* RF par DC */}
           <div style={{ display: "flex", flexDirection: "column", gap: "0.45rem", flexShrink: 0 }}>
             {rfRow("RF — DC1 (Indigo)", rfDc1, setRfDc1, 3)}
-            {rfRow("RF — DC2 (Émeraude)", rfDc2, setRfDc2, 3)}
+            {rfRow("RF — DC2 (Emerald)", rfDc2, setRfDc2, 3)}
           </div>
 
           {/* Bouton */}
@@ -216,14 +216,14 @@ export default function StrategySelector({ onSelect }) {
             onClick={() => launch("nts")} disabled={loading !== null}
             style={{ flexShrink: 0, width: "100%", padding: "clamp(0.6rem, 1.3vh, 0.85rem)", borderRadius: 12, background: loading === "nts" ? "var(--text-tertiary)" : "var(--success-color)", border: "none", color: "white", fontWeight: 700, fontSize: "clamp(13px, 1.6vh, 15px)", cursor: loading !== null ? "not-allowed" : "pointer", transition: "all 0.2s", boxShadow: loading === "nts" ? "none" : "0 4px 14px rgba(16, 185, 129, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
-            {loading === "nts" ? <><Loader2 size={16} /> Connexion...</> : <><Play size={16} /> Simuler NTS</>}
+            {loading === "nts" ? <><Loader2 size={16} /> Connecting...</> : <><Play size={16} /> Simulate NTS</>}
           </button>
         </div>
       </div>
 
       {/* ── Footer ── */}
       <p style={{ margin: 0, flexShrink: 0, color: "var(--text-secondary)", fontSize: "clamp(10px, 1.3vh, 13px)", marginTop: "1vh" }}>
-        Vous pourrez changer de stratégie à tout moment depuis l'interface principale
+        You can change the strategy at any time from the main interface
       </p>
     </div>
   );

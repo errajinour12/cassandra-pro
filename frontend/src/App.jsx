@@ -20,13 +20,13 @@ const API = "http://localhost:8000";
 
 const TABS = [
   { id: "cluster", label: "Architecture", icon: <LayoutGrid size={18} /> },
-  { id: "partitionnement", label: "Partitionnement", icon: <PieChart size={18} /> },
+  { id: "partitionnement", label: "Partitioning", icon: <PieChart size={18} /> },
   { id: "ring", label: "Token Ring", icon: <CircleDashed size={18} /> },
-  { id: "replication", label: "Réplication", icon: <Copy size={18} /> },
-  { id: "writepath", label: "Flux d'Écriture", icon: <ArrowLeftRight size={18} /> },
-  { id: "updatepath", label: "Mise à Jour", icon: <Edit2 size={18} /> },
-  { id: "deletepath", label: "Suppression", icon: <Trash2 size={18} /> },
-  { id: "failure", label: "Pannes & Quorum", icon: <ShieldAlert size={18} /> },
+  { id: "replication", label: "Replication", icon: <Copy size={18} /> },
+  { id: "writepath", label: "Write Path", icon: <ArrowLeftRight size={18} /> },
+  { id: "updatepath", label: "Update Path", icon: <Edit2 size={18} /> },
+  { id: "deletepath", label: "Delete Path", icon: <Trash2 size={18} /> },
+  { id: "failure", label: "Failures & Quorum", icon: <ShieldAlert size={18} /> },
 ];
 
 function useLocalStorage(key, initialValue) {
@@ -131,7 +131,7 @@ export default function App() {
   }, [fetchCluster, strategyConfig]);
 
   const handleChangeStrategy = () => {
-    if (window.confirm("⚠️ Retourner à l'accueil effacera le cluster actuel. Continuer ?")) {
+    if (window.confirm("⚠️ Returning to home will erase the current cluster. Continue?")) {
       clearCache();
       setStrategyConfig(null);
       setSelectedUser(null);
@@ -141,7 +141,7 @@ export default function App() {
   };
 
   const resetSimulation = () => {
-    if (window.confirm("🚨 Voulez-vous vraiment réinitialiser toute la simulation ?")) {
+    if (window.confirm("🚨 Do you really want to reset the entire simulation?")) {
       clearCache();
       window.location.reload();
     }
@@ -275,7 +275,7 @@ export default function App() {
     setInsertError("");
 
     if (allData.some(d => d.user_id === userId)) {
-      setInsertError(`"${userId}" existe déjà dans la base !`);
+      setInsertError(`"${userId}" already exists in the database!`);
       return;
     }
 
@@ -285,7 +285,7 @@ export default function App() {
     if (downNodes.size > 0 && selectedUser) {
       const check = checkConsistency(selectedUser);
       if (!check.can) {
-        setInsertError(`Échec Consistance (${consistency}) : ${check.up}/${check.needed} nœuds requis.`);
+        setInsertError(`Consistency Failure (${consistency}): ${check.up}/${check.needed} nodes required.`);
         setInsertLoading(false);
         return;
       }
@@ -310,7 +310,7 @@ export default function App() {
     if (downNodes.size > 0) {
       const check = checkConsistency(modal.user);
       if (!check.can) {
-        setModalError(`Échec Consistance (${consistency}).`);
+        setModalError(`Consistency Failure (${consistency}).`);
         setModalLoading(false);
         return;
       }
@@ -337,7 +337,7 @@ export default function App() {
     if (downNodes.size > 0) {
       const check = checkConsistency(modal.user);
       if (!check.can) {
-        setModalError(`Échec Consistance (${consistency}).`);
+        setModalError(`Consistency Failure (${consistency}).`);
         setModalLoading(false);
         return;
       }
@@ -385,13 +385,13 @@ export default function App() {
           </div>
           <div>
             <h1 style={{ fontSize: "1.1rem" }}>SimCassandra</h1>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-tertiary)" }}>Dashboard Éducatif</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-tertiary)" }}>Educational Dashboard</div>
           </div>
         </div>
 
         <nav style={{ display: "flex", flexDirection: "column", gap: "0.25rem", flex: 1 }}>
           <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem", marginTop: "0.5rem" }}>
-            Visualisations
+            Visualizations
           </div>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} className={`nav-item ${tab === t.id ? "active" : ""}`}>
@@ -406,18 +406,18 @@ export default function App() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-              <span style={{ color: "var(--text-secondary)" }}>Stratégie</span>
+              <span style={{ color: "var(--text-secondary)" }}>Strategy</span>
               <span style={{ fontWeight: 600 }}>{strategyLabel}</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-              <span style={{ color: "var(--text-secondary)" }}>Statut</span>
+              <span style={{ color: "var(--text-secondary)" }}>Status</span>
               <span className={`badge ${backendStatus === "ok" ? "badge-success" : "badge-error"}`}>
-                {backendStatus === "ok" ? "Connecté" : "Hors ligne"}
+                {backendStatus === "ok" ? "Connected" : "Offline"}
               </span>
             </div>
           </div>
           <button className="btn btn-outline" style={{ width: "100%", marginTop: "1rem" }} onClick={handleChangeStrategy}>
-            Retour à l'accueil
+            Return to Home
           </button>
         </div>
       </aside>
@@ -433,13 +433,13 @@ export default function App() {
 
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)" }}>Consistance :</label>
+              <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-secondary)" }}>Consistency :</label>
               <select value={consistency} onChange={e => setConsistency(e.target.value)} className="input-field" style={{ padding: "0.3rem 0.75rem", width: "auto" }}>
                 {consistencyOptions.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
             </div>
             <button className="btn btn-outline" style={{ padding: "0.4rem 0.75rem" }} onClick={fetchCluster}>
-              <RotateCcw size={14} /> Actualiser
+              <RotateCcw size={14} /> Refresh
             </button>
           </div>
         </header>
@@ -451,9 +451,9 @@ export default function App() {
                       {/* Architecture is always rendered in background */}
               <div className="content-wrapper">
                 <PageHeader 
-                  title="Architecture Globale & Gossip" 
+                  title="Global Architecture & Gossip" 
                   icon={<LayoutGrid />} 
-                  description={<span>Visualisez la topologie physique de votre cluster Cassandra. Le réseau est maillé (P2P) et les nœuds échangent en permanence leur état via le protocole <Tooltip text="Protocole P2P permettant aux nœuds d'échanger leur état de santé et de topologie.">Gossip</Tooltip> (simulé par les flux lumineux).</span>}
+                  description={<span>Visualize the physical topology of your Cassandra cluster. The network is meshed (P2P) and nodes constantly exchange their state via the <Tooltip text="P2P protocol allowing nodes to exchange their health and topology state.">Gossip</Tooltip> protocol (simulated by light streams).</span>}
                 />
                 <div style={{ marginTop: "1rem" }}>
                   <Architecture nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} strategy={strategyConfig.strategy} downNodes={downNodes} />
@@ -466,12 +466,12 @@ export default function App() {
             {/* Injection Form */}
             <div style={{ padding: "1.25rem", borderBottom: "1px solid var(--border-subtle)", background: "var(--bg-app)" }}>
               <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
-                <PlusCircle size={16} color="var(--primary-color)" /> Injecter une donnée
+                <PlusCircle size={16} color="var(--primary-color)" /> Inject Data
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                <input className="input-field" placeholder="Clé primaire (ex: user_42)" value={userId} onChange={e => { setUserId(e.target.value); setInsertError(""); }} />
-                <input className="input-field" placeholder="Nom complet" value={name} onChange={e => setName(e.target.value)} />
-                <input className="input-field" placeholder="Email (optionnel)" value={email} onChange={e => setEmail(e.target.value)} />
+                <input className="input-field" placeholder="Primary Key (e.g., user_42)" value={userId} onChange={e => { setUserId(e.target.value); setInsertError(""); }} />
+                <input className="input-field" placeholder="Full Name" value={name} onChange={e => setName(e.target.value)} />
+                <input className="input-field" placeholder="Email (optional)" value={email} onChange={e => setEmail(e.target.value)} />
 
                 {insertError && (
                   <div style={{ background: "var(--error-bg)", borderRadius: "var(--radius-sm)", padding: "0.75rem", fontSize: "0.8rem", color: "var(--error-color)", display: "flex", gap: "0.5rem", alignItems: "flex-start", border: "1px solid var(--error-border)" }}>
@@ -481,7 +481,7 @@ export default function App() {
                 )}
 
                 <button className="btn btn-primary" onClick={insertUser} disabled={insertLoading || backendStatus !== "ok" || !userId || !name} style={{ width: "100%" }}>
-                  {insertLoading ? "En cours..." : "Insérer (Write)"}
+                  {insertLoading ? "Inserting..." : "Insert (Write)"}
                 </button>
               </div>
             </div>
@@ -489,14 +489,14 @@ export default function App() {
             {/* Data List */}
             <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Base de données</div>
-                <span className="badge badge-neutral">{allData.length} lignes</span>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-primary)" }}>Database</div>
+                <span className="badge badge-neutral">{allData.length} rows</span>
               </div>
 
               {allData.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "3rem 0", color: "var(--text-tertiary)" }}>
                   <Database size={32} strokeWidth={1} style={{ marginBottom: "1rem", opacity: 0.5 }} />
-                  <div style={{ fontSize: "0.85rem" }}>Aucune donnée.</div>
+                  <div style={{ fontSize: "0.85rem" }}>No data.</div>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -511,11 +511,11 @@ export default function App() {
                             <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: 2 }}>{d.name}</div>
                           </div>
                           <div style={{ display: "flex", gap: "0.25rem" }} onClick={e => e.stopPropagation()}>
-                            <button title="Modifier" onClick={() => { setModalError(""); setModal({ type: "edit", user: d }); }}
+                            <button title="Edit" onClick={() => { setModalError(""); setModal({ type: "edit", user: d }); }}
                               className="btn btn-ghost" style={{ padding: "0.3rem" }}>
                               <Edit2 size={14} />
                             </button>
-                            <button title="Supprimer" onClick={() => { setModalError(""); setModal({ type: "delete", user: d }); }}
+                            <button title="Delete" onClick={() => { setModalError(""); setModal({ type: "delete", user: d }); }}
                               className="btn btn-ghost" style={{ padding: "0.3rem", color: "var(--error-color)" }}>
                               <Trash2 size={14} />
                             </button>
@@ -539,9 +539,9 @@ export default function App() {
                   <div style={{ background: "var(--primary-light)", width: 64, height: 64, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
                     <Copy size={28} color="var(--primary-color)" />
                   </div>
-                  <h2 style={{ marginBottom: "0.5rem" }}>Sélectionnez une donnée</h2>
+                  <h2 style={{ marginBottom: "0.5rem" }}>Select a Data Entry</h2>
                   <p>
-                    Pour explorer le fonctionnement interne (Partitionnement, Réplication, Écriture), vous devez d'abord injecter une donnée via le panneau latéral de droite, ou en sélectionner une existante.
+                    To explore internal operations (Partitioning, Replication, Writing), you must first inject data via the right side panel, or select an existing one.
                   </p>
                 </div>
               </div>
@@ -550,7 +550,7 @@ export default function App() {
                 <div className="card" style={{ background: "var(--primary-light)", border: "1px solid var(--primary-border)", padding: "0.75rem 1.25rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--primary-hover)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 2 }}>
-                      Donnée Active
+                      Active Data
                     </div>
                     <div style={{ fontSize: "1.05rem", fontWeight: 600 }}>
                       {selectedUser.user_id}
@@ -563,14 +563,14 @@ export default function App() {
 
                 {tab === "partitionnement" && (
                   <div>
-                    <PageHeader title="Partitionnement" icon={<PieChart />} description={<span>Cassandra utilise une fonction de hachage (<Tooltip text="Algorithme de hachage ultra-rapide utilisé par Cassandra.">Murmur3</Tooltip>) pour transformer votre <Tooltip text="Identifiant unique d'une ligne, dont la clé de partition est hachée pour le placement.">Clé Primaire</Tooltip> en un <Tooltip text="Entier généré par hachage déterminant la position de la donnée sur l'anneau.">Token</Tooltip>. Ce Token détermine sur quel nœud principal la donnée sera stockée en suivant l'anneau (<Tooltip text="Anneau virtuel de tokens de -2^63 à +2^63-1.">Token Ring</Tooltip>).</span>} />
+                    <PageHeader title="Partitioning" icon={<PieChart />} description={<span>Cassandra uses a hash function (<Tooltip text="Ultra-fast hash algorithm used by Cassandra.">Murmur3</Tooltip>) to transform your <Tooltip text="Unique identifier of a row, whose partition key is hashed for placement.">Primary Key</Tooltip> into a <Tooltip text="Integer generated by hashing determining the data's position on the ring.">Token</Tooltip>. This Token determines which main node the data will be stored on following the ring (<Tooltip text="Virtual ring of tokens from -2^63 to +2^63-1.">Token Ring</Tooltip>).</span>} />
                     <Partitionnement nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} selectedUser={selectedUser} allData={allData} strategy={strategyConfig.strategy} />
                   </div>
                 )}
 
                 {tab === "ring" && (
                   <div>
-                    <PageHeader title="Position sur le Ring" icon={<CircleDashed />} description={<span>L'anneau représente l'espace de tous les tokens possibles (-2^63 à +2^63-1). Le point en surbrillance indique exactement où la donnée atterrit.</span>} />
+                    <PageHeader title="Position on the Ring" icon={<CircleDashed />} description={<span>The ring represents the space of all possible tokens (-2^63 to +2^63-1). The highlighted point indicates exactly where the data lands.</span>} />
                     <div className="card">
                       <TokenRing nodes={strategyConfig.strategy === "nts" ? nodes : filteredNodes} nodesWithTokens={strategyConfig.strategy === "nts" ? nodesWithTokens : filteredNodesWithTokens} highlightToken={selectedUser.token} downNodes={downNodes} strategy={strategyConfig.strategy} />
                     </div>
@@ -579,35 +579,35 @@ export default function App() {
 
                 {tab === "replication" && (
                   <div>
-                    <PageHeader title="Réplication" icon={<Copy />} description={<span>Pour garantir la haute disponibilité, la donnée n'est pas stockée sur un seul nœud, mais copiée sur plusieurs nœuds voisins selon le <Tooltip text="Nombre de copies totales d'une donnée dans le cluster.">Facteur de Réplication (RF)</Tooltip>.</span>} />
+                    <PageHeader title="Replication" icon={<Copy />} description={<span>To guarantee high availability, data is not stored on a single node, but copied to several neighboring nodes according to the <Tooltip text="Total number of copies of a data entry in the cluster.">Replication Factor (RF)</Tooltip>.</span>} />
                     <Replication nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} downNodes={downNodes} />
                   </div>
                 )}
 
                 {tab === "failure" && (
                   <div>
-                    <PageHeader title="Pannes & Quorum" icon={<ShieldAlert />} description={<span>Simulez des pannes de nœuds en cliquant dessus. Observez comment le niveau de consistance (ex: <Tooltip text="Niveau exigeant la majorité des réplicas (RF/2 + 1) pour valider l'opération.">QUORUM</Tooltip>) permet au cluster de continuer à fonctionner même si certains nœuds sont hors ligne.</span>} />
+                    <PageHeader title="Failures & Quorum" icon={<ShieldAlert />} description={<span>Simulate node failures by clicking on them. Observe how the consistency level (e.g., <Tooltip text="Level requiring the majority of replicas (RF/2 + 1) to validate the operation.">QUORUM</Tooltip>) allows the cluster to continue functioning even if some nodes are offline.</span>} />
                     <FailureSimulator nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} selectedUser={selectedUser} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} setDownNodes={setDownNodes} />
                   </div>
                 )}
 
                 {tab === "writepath" && (
                   <div>
-                    <PageHeader title="Le chemin d'une Écriture" icon={<ArrowLeftRight />} description={<span>Visualisez le parcours exact de votre donnée : du client vers le nœud coordinateur, puis vers les réplicas finaux, incluant le <Tooltip text="Journal d'ajout séquentiel garantissant la durabilité (sur disque) des écritures.">Commit Log</Tooltip> et la <Tooltip text="Structure en mémoire (RAM) tamponnant les écritures avant leur vidage sur disque (SSTable).">Memtable</Tooltip>.</span>} />
+                    <PageHeader title="The Path of a Write" icon={<ArrowLeftRight />} description={<span>Visualize the exact path of your data: from the client to the coordinator node, then to the final replicas, including the <Tooltip text="Sequential append log guaranteeing the durability (on disk) of writes.">Commit Log</Tooltip> and the <Tooltip text="In-memory (RAM) structure buffering writes before flushing them to disk (SSTable).">Memtable</Tooltip>.</span>} />
                     <WritePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} autoPlayId={autoPlayId} downNodes={downNodes} />
                   </div>
                 )}
 
                 {tab === "deletepath" && (
                   <div>
-                    <PageHeader title="Tombstones & Suppression" icon={<Trash2 />} description={<span>Dans Cassandra, une suppression n'efface pas immédiatement la donnée. Elle écrit un <Tooltip text="Marqueur de suppression permettant d'effacer une donnée de manière distribuée.">Tombstone</Tooltip> (pierre tombale), un marqueur de suppression qui sera répliqué comme une écriture normale.</span>} />
+                    <PageHeader title="Tombstones & Deletion" icon={<Trash2 />} description={<span>In Cassandra, a deletion does not immediately erase the data. It writes a <Tooltip text="Deletion marker allowing data to be erased in a distributed manner.">Tombstone</Tooltip>, a deletion marker that will be replicated like a normal write.</span>} />
                     <DeletePath selectedUser={selectedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} autoPlayId={autoDeleteId} />
                   </div>
                 )}
 
                 {tab === "updatepath" && (
                   <div>
-                    <PageHeader title="Mise à Jour (Upsert)" icon={<Edit2 />} description={<span>Une mise à jour dans Cassandra est techniquement identique à une insertion (<Tooltip text="Opération qui insère une donnée si elle n'existe pas, ou la met à jour si elle existe.">Upsert</Tooltip>). L'ancienne donnée est écrasée par la nouvelle (via le système de timestamps internes).</span>} />
+                    <PageHeader title="Update (Upsert)" icon={<Edit2 />} description={<span>An update in Cassandra is technically identical to an insertion (<Tooltip text="Operation that inserts data if it doesn't exist, or updates it if it does.">Upsert</Tooltip>). The old data is overwritten by the new one (via the internal timestamps system).</span>} />
                     <UpdatePath selectedUser={selectedUser} updatedUser={updatedUser} nodes={filteredNodes} nodesWithTokens={filteredNodesWithTokens} rf={strategyConfig.rf} rfPerDc={strategyConfig.rfPerDc} strategy={strategyConfig.strategy} consistency={consistency} downNodes={downNodes} autoPlayId={autoUpdateId} />
                   </div>
                 )}

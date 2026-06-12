@@ -3,7 +3,7 @@ import time
 from cassandra.cluster import Cluster
 from cassandra.policies import RoundRobinPolicy
 
-# ── Configuration via variable d'environnement ───────────────────────────────
+# ── Configuration via environment variable ───────────────────────────────
 CASSANDRA_HOST = os.getenv("CASSANDRA_HOST", "127.0.0.1")
 
 cluster = None
@@ -12,9 +12,9 @@ session = None
 
 def connect(retries: int = 10, delay: int = 10):
     """
-    Se connecte à Cassandra avec mécanisme de retry.
-    Utilise la variable CASSANDRA_HOST (défaut: 127.0.0.1 pour dev local,
-    à surcharger avec le nom DNS Docker en production).
+    Connects to Cassandra with retry mechanism.
+    Uses CASSANDRA_HOST variable (default: 127.0.0.1 for local dev,
+    override with Docker DNS name in production).
     """
     global cluster, session
     for attempt in range(1, retries + 1):
@@ -27,14 +27,14 @@ def connect(retries: int = 10, delay: int = 10):
             )
             session = cluster.connect()
             _setup_keyspace_simple(3)
-            print(f"✅ Connecté à Cassandra sur {CASSANDRA_HOST} !")
+            print(f"✅ Connected to Cassandra on {CASSANDRA_HOST}!")
             return
         except Exception as e:
-            print(f"⏳ Tentative {attempt}/{retries} — impossible de joindre Cassandra ({e})")
+            print(f"⏳ Attempt {attempt}/{retries} — unable to reach Cassandra ({e})")
             if attempt < retries:
                 time.sleep(delay)
     raise RuntimeError(
-        f"❌ Impossible de se connecter à Cassandra après {retries} tentatives."
+        f"❌ Unable to connect to Cassandra after {retries} attempts."
     )
 
 
@@ -60,7 +60,7 @@ def _setup_keyspace_simple(rf: int):
     _setup_table()
 
 
-# ── Changer la stratégie du keyspace ────────────────────────────────────────
+# ── Change keyspace strategy ────────────────────────────────────────
 
 def alter_strategy_simple(rf: int):
     session.execute(f"""
@@ -84,7 +84,7 @@ def alter_strategy_nts(dc_options: dict):
     """)
 
 
-# ── Helpers cluster ──────────────────────────────────────────────────────────
+# ── Cluster helpers ──────────────────────────────────────────────────────────
 
 def get_nodes_info():
     nodes = []
@@ -93,13 +93,13 @@ def get_nodes_info():
             "address":    str(host.address),
             "datacenter": host.datacenter,
             "rack":       host.rack,
-            "is_up":      host.is_up  # état réel rapporté par le driver
+            "is_up":      host.is_up  # actual state reported by driver
         })
     return nodes
 
 
 def get_datacenters() -> dict:
-    """Retourne {dc_name: [adresse, ...]} pour tous les DCs du cluster."""
+    """Returns {dc_name: [address, ...]} for all DCs in the cluster."""
     dcs: dict = {}
     for host in cluster.metadata.all_hosts():
         dc = host.datacenter
