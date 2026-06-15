@@ -80,7 +80,7 @@ export default function StrategySelector({ onSelect }) {
   const [rfDc2, setRfDc2] = useState(3);
   const [loading, setLoading] = useState(null);
 
-  const launch = (strategy) => {
+  const launch = async (strategy) => {
     setLoading(strategy);
     const config = {
       strategy,
@@ -90,11 +90,30 @@ export default function StrategySelector({ onSelect }) {
     const body = strategy === "simple"
       ? { strategy: "simple", replication_factor: simpleRf, dc_options: {} }
       : { strategy: "nts", replication_factor: 0, dc_options: { dc1: rfDc1, dc2: rfDc2 } };
-    fetch("http://127.0.0.1:8000/cluster/strategy", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    }).catch(e => console.warn("Backend strategy change:", e));
-    setTimeout(() => { onSelect(config); setLoading(null); }, 300);
+
+    // Wait for backend to apply the strategy change before proceeding
+    try {
+      await fetch("http://127.0.0.1:8000/cluster/strategy", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+    } catch (e) {
+      console.warn("Backend strategy change failed:", e);
+    }
+
+    // Poll until the cluster endpoint is healthy (up to 15s)
+    let attempts = 0;
+    while (attempts < 15) {
+      try {
+        const r = await fetch("http://127.0.0.1:8000/cluster/nodes");
+        if (r.ok) break;
+      } catch (_) { /* keep waiting */ }
+      await new Promise(res => setTimeout(res, 1000));
+      attempts++;
+    }
+
+    onSelect(config);
+    setLoading(null);
   };
 
   const rfRow = (label, val, set, max) => (
@@ -171,7 +190,7 @@ export default function StrategySelector({ onSelect }) {
             onClick={() => launch("simple")} disabled={loading !== null}
             style={{ flexShrink: 0, width: "100%", padding: "clamp(0.6rem, 1.3vh, 0.85rem)", borderRadius: 12, background: loading === "simple" ? "var(--text-tertiary)" : "var(--primary-color)", border: "none", color: "white", fontWeight: 700, fontSize: "clamp(13px, 1.6vh, 15px)", cursor: loading !== null ? "not-allowed" : "pointer", transition: "all 0.2s", boxShadow: loading === "simple" ? "none" : "0 4px 14px rgba(59, 130, 246, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
-            {loading === "simple" ? <><Loader2 size={16} /> Connecting...</> : <><Play size={16} /> Simulate SimpleStrategy</>}
+            {loading === "simple" ? <><Loader2 size={16} className="spin" /> Configuring...</> : <><Play size={16} /> Simulate SimpleStrategy</>}
           </button>
         </div>
 
@@ -216,7 +235,7 @@ export default function StrategySelector({ onSelect }) {
             onClick={() => launch("nts")} disabled={loading !== null}
             style={{ flexShrink: 0, width: "100%", padding: "clamp(0.6rem, 1.3vh, 0.85rem)", borderRadius: 12, background: loading === "nts" ? "var(--text-tertiary)" : "var(--success-color)", border: "none", color: "white", fontWeight: 700, fontSize: "clamp(13px, 1.6vh, 15px)", cursor: loading !== null ? "not-allowed" : "pointer", transition: "all 0.2s", boxShadow: loading === "nts" ? "none" : "0 4px 14px rgba(16, 185, 129, 0.4)", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}
           >
-            {loading === "nts" ? <><Loader2 size={16} /> Connecting...</> : <><Play size={16} /> Simulate NTS</>}
+            {loading === "nts" ? <><Loader2 size={16} className="spin" /> Configuring...</> : <><Play size={16} /> Simulate NTS</>}
           </button>
         </div>
       </div>

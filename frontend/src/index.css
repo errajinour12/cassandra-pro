@@ -5,47 +5,53 @@
   --bg-app: #f8fafc;
   --bg-sidebar: #ffffff;
   --bg-surface: #ffffff;
-  
+
   --border-subtle: #f1f5f9;
   --border-light: #e2e8f0;
   --border-hover: #cbd5e1;
-  
+
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-tertiary: #94a3b8;
-  
+
   /* Brand Primary */
   --primary-color: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-light: #eff6ff;
   --primary-border: #bfdbfe;
-  
+
   /* Status Colors */
   --success-color: #059669;
   --success-bg: #ecfdf5;
   --success-border: #a7f3d0;
-  
+
   --error-color: #dc2626;
   --error-bg: #fef2f2;
   --error-border: #fecaca;
-  
+
   --warning-color: #d97706;
   --warning-bg: #fffbeb;
   --warning-border: #fde68a;
 
   /* Node Colors for Ring (Distinct & Pedagogical) */
-  --node-0: #4f46e5; /* Indigo */
-  --node-1: #0ea5e9; /* Sky */
-  --node-2: #10b981; /* Emerald */
-  --node-3: #f59e0b; /* Amber */
-  --node-4: #8b5cf6; /* Violet */
-  --node-5: #ec4899; /* Pink */
+  --node-0: #4f46e5;
+  /* Indigo */
+  --node-1: #0ea5e9;
+  /* Sky */
+  --node-2: #10b981;
+  /* Emerald */
+  --node-3: #f59e0b;
+  /* Amber */
+  --node-4: #8b5cf6;
+  /* Violet */
+  --node-5: #ec4899;
+  /* Pink */
 
   /* Modern Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
   --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
   --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.06), 0 4px 8px -4px rgba(0, 0, 0, 0.03);
-  
+
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -68,7 +74,12 @@ body {
   line-height: 1.5;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Outfit', sans-serif;
   margin: 0;
   font-weight: 600;
@@ -278,21 +289,49 @@ p {
   border: 1px solid transparent;
 }
 
-.badge-success { background: var(--success-bg); color: var(--success-color); border-color: var(--success-border); }
-.badge-error { background: var(--error-bg); color: var(--error-color); border-color: var(--error-border); }
-.badge-warning { background: var(--warning-bg); color: var(--warning-color); border-color: var(--warning-border); }
-.badge-primary { background: var(--primary-light); color: var(--primary-color); border-color: var(--primary-border); }
-.badge-neutral { background: var(--bg-app); color: var(--text-secondary); border-color: var(--border-light); }
+.badge-success {
+  background: var(--success-bg);
+  color: var(--success-color);
+  border-color: var(--success-border);
+}
+
+.badge-error {
+  background: var(--error-bg);
+  color: var(--error-color);
+  border-color: var(--error-border);
+}
+
+.badge-warning {
+  background: var(--warning-bg);
+  color: var(--warning-color);
+  border-color: var(--warning-border);
+}
+
+.badge-primary {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  border-color: var(--primary-border);
+}
+
+.badge-neutral {
+  background: var(--bg-app);
+  color: var(--text-secondary);
+  border-color: var(--border-light);
+}
 
 /* ── Node Rings Specifics ── */
 .node-card {
   position: relative;
   overflow: hidden;
 }
+
 .node-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; height: 5px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
   background: var(--node-color, #e2e8f0);
 }
 
@@ -304,6 +343,7 @@ p {
   position: relative;
   margin-bottom: 2rem;
 }
+
 .stepper-line {
   position: absolute;
   top: 50%;
@@ -313,6 +353,7 @@ p {
   background: var(--border-light);
   z-index: 1;
 }
+
 .step-item {
   position: relative;
   z-index: 2;
@@ -321,6 +362,7 @@ p {
   align-items: center;
   gap: 0.5rem;
 }
+
 .step-circle {
   width: 32px;
   height: 32px;
@@ -334,31 +376,48 @@ p {
   color: var(--text-tertiary);
   transition: all 0.3s ease;
 }
+
 .step-item.active .step-circle {
   border-color: var(--primary-color);
   color: var(--primary-color);
   box-shadow: 0 0 0 4px var(--primary-light);
 }
+
 .step-item.completed .step-circle {
   background: var(--primary-color);
   border-color: var(--primary-color);
   color: white;
 }
+
 .step-label {
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-secondary);
 }
+
 .step-item.active .step-label {
   color: var(--text-primary);
   font-weight: 600;
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
 
 
 /* ── Cisco-Style Dashboard Layout ── */
@@ -385,7 +444,7 @@ p {
   flex: 1;
   position: relative;
   background-color: #f4f7fb;
-  background-image: 
+  background-image:
     linear-gradient(rgba(37, 99, 235, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(37, 99, 235, 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
@@ -407,14 +466,14 @@ p {
   background: white;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
   transform: translate(-50%, -50%);
   z-index: 10;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .net-node:hover {
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   border-color: var(--border-hover);
 }
 
@@ -461,12 +520,21 @@ p {
 
 /* Radar Animation for Coordinator */
 @keyframes radarSweep {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
+
 .radar-ring {
   position: absolute;
-  top: -10px; left: -10px; right: -10px; bottom: -10px;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
   border-radius: 50%;
   border: 1px dashed var(--primary-color);
   opacity: 0.4;
@@ -484,6 +552,7 @@ p {
   width: 100%;
   justify-content: center;
 }
+
 .led-indicator {
   display: flex;
   align-items: center;
@@ -492,6 +561,7 @@ p {
   font-weight: 700;
   color: var(--text-tertiary);
 }
+
 .led-dot {
   width: 6px;
   height: 6px;
@@ -501,9 +571,20 @@ p {
 }
 
 /* LED States */
-.led-dot.active-write { background: var(--success-color); box-shadow: 0 0 6px var(--success-color); }
-.led-dot.active-update { background: var(--warning-color); box-shadow: 0 0 6px var(--warning-color); }
-.led-dot.active-delete { background: var(--error-color); box-shadow: 0 0 6px var(--error-color); }
+.led-dot.active-write {
+  background: var(--success-color);
+  box-shadow: 0 0 6px var(--success-color);
+}
+
+.led-dot.active-update {
+  background: var(--warning-color);
+  box-shadow: 0 0 6px var(--warning-color);
+}
+
+.led-dot.active-delete {
+  background: var(--error-color);
+  box-shadow: 0 0 6px var(--error-color);
+}
 
 /* Status Badges */
 .net-badge {
@@ -515,11 +596,18 @@ p {
   font-size: 0.6rem;
   font-weight: 800;
   color: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 15;
 }
-.badge-down { background: var(--error-color); }
-.badge-ping { background: var(--warning-color); animation: pulsePing 1.5s infinite; }
+
+.badge-down {
+  background: var(--error-color);
+}
+
+.badge-ping {
+  background: var(--warning-color);
+  animation: pulsePing 1.5s infinite;
+}
 
 /* ── Fiber Optic Path Animations ── */
 .fiber-path {
@@ -547,33 +635,84 @@ p {
   filter: drop-shadow(0 0 4px currentColor);
 }
 
-.beam-write { stroke: var(--primary-color); }
-.beam-update { stroke: var(--warning-color); }
-.beam-delete { stroke: var(--error-color); }
-.beam-ack { stroke: var(--success-color); stroke-width: 3px; stroke-dasharray: 20 1000; }
+.beam-write {
+  stroke: var(--primary-color);
+}
+
+.beam-update {
+  stroke: var(--warning-color);
+}
+
+.beam-delete {
+  stroke: var(--error-color);
+}
+
+.beam-ack {
+  stroke: var(--success-color);
+  stroke-width: 3px;
+  stroke-dasharray: 20 1000;
+}
 
 @keyframes shootBeamForwards {
-  0% { stroke-dashoffset: 1040; opacity: 1; }
-  90% { stroke-dashoffset: 0; opacity: 1; }
-  100% { stroke-dashoffset: 0; opacity: 0; }
+  0% {
+    stroke-dashoffset: 1040;
+    opacity: 1;
+  }
+
+  90% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
 }
 
 @keyframes shootBeamBackwards {
-  0% { stroke-dashoffset: 0; opacity: 1; }
-  90% { stroke-dashoffset: 1040; opacity: 1; }
-  100% { stroke-dashoffset: 1040; opacity: 0; }
+  0% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+
+  90% {
+    stroke-dashoffset: 1040;
+    opacity: 1;
+  }
+
+  100% {
+    stroke-dashoffset: 1040;
+    opacity: 0;
+  }
 }
 
 /* We trigger animation by adding this class dynamically */
-.animate-forward { animation: shootBeamForwards 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-.animate-backward { animation: shootBeamBackwards 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.animate-forward {
+  animation: shootBeamForwards 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-backward {
+  animation: shootBeamBackwards 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
 /* Tombstone icon animation */
 @keyframes tombstoneDrop {
-  0% { transform: translateY(-10px) scale(1.5); opacity: 0; }
-  50% { opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 1; }
+  0% {
+    transform: translateY(-10px) scale(1.5);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
 }
+
 .tombstone-anim {
   animation: tombstoneDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
@@ -611,40 +750,104 @@ p {
   height: 8px;
   background: #fff;
   box-shadow: 0 0 10px 4px rgba(16, 185, 129, 0.8);
-  animation-duration: 1s; /* Faster ACKs */
+  animation-duration: 1s;
+  /* Faster ACKs */
 }
 
 @keyframes flyParticle {
-  0% { top: var(--start-y); left: var(--start-x); opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-  10% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-  90% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { top: var(--end-y); left: var(--end-x); opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  0% {
+    top: var(--start-y);
+    left: var(--start-x);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+
+  10% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+
+  90% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  100% {
+    top: var(--end-y);
+    left: var(--end-x);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
 }
 
 /* Delay classes so particles don't all shoot at exactly the same time if we want staggered effects */
-.delay-1 { animation-delay: 0.2s; }
-.delay-2 { animation-delay: 0.4s; }
-.delay-3 { animation-delay: 0.6s; }
+.delay-1 {
+  animation-delay: 0.2s;
+}
+
+.delay-2 {
+  animation-delay: 0.4s;
+}
+
+.delay-3 {
+  animation-delay: 0.6s;
+}
 
 @keyframes dataPulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  50% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.8; }
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
 }
 
 @keyframes serverVibrate {
-  0% { transform: translate(-50%, -50%) translate(0, 0); }
-  20% { transform: translate(-50%, -50%) translate(-1px, 1px); }
-  40% { transform: translate(-50%, -50%) translate(1px, -1px); }
-  60% { transform: translate(-50%, -50%) translate(-1px, -1px); }
-  80% { transform: translate(-50%, -50%) translate(1px, 1px); }
-  100% { transform: translate(-50%, -50%) translate(0, 0); }
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0);
+  }
+
+  20% {
+    transform: translate(-50%, -50%) translate(-1px, 1px);
+  }
+
+  40% {
+    transform: translate(-50%, -50%) translate(1px, -1px);
+  }
+
+  60% {
+    transform: translate(-50%, -50%) translate(-1px, -1px);
+  }
+
+  80% {
+    transform: translate(-50%, -50%) translate(1px, 1px);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) translate(0, 0);
+  }
 }
 
 @keyframes pulseCoord {
-  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-  70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 15px rgba(37, 99, 235, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
 }
 
 /* ── Server Vibration (Phase 3) ── */
@@ -655,21 +858,64 @@ p {
 
 /* ── LED Hyper Blink ── */
 @keyframes ledHyperBlink {
-  0%, 100% { opacity: 1; transform: scale(1.5); }
-  50% { opacity: 0.3; transform: scale(1); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+
+  50% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
 }
 
 @keyframes ledPulse {
-  0% { box-shadow: 0 0 0px #10b981; }
-  50% { box-shadow: 0 0 12px #10b981; }
-  100% { box-shadow: 0 0 0px #10b981; }
+  0% {
+    box-shadow: 0 0 0px #10b981;
+  }
+
+  50% {
+    box-shadow: 0 0 12px #10b981;
+  }
+
+  100% {
+    box-shadow: 0 0 0px #10b981;
+  }
 }
+
 .led-hyper-blink {
   animation: ledHyperBlink 0.1s infinite;
 }
 
 /* ── Missing LED Pulse Keyframe ── */
 @keyframes ledPulse {
-  0%, 100% { opacity: 1; transform: scale(1.3); }
-  50% { opacity: 0.3; transform: scale(1); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+
+  50% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+}
+
+/* ── Loader spin ── */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
 }

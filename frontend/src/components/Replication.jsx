@@ -66,7 +66,7 @@ function NodeCard({ n, i, isPrimary, isReplica, isDown, isSimDown, isReallyDown,
   const hasData = isPrimary || isReplica;
   return (
     <div className="card node-card" style={{
-      width: 140, padding: "1.25rem 0.75rem", textAlign: "center",
+      width: 152, padding: "1.25rem 0.75rem", textAlign: "center",
       "--node-color": nodeColor,
       background: isDown ? "var(--error-bg)" : "var(--bg-surface)",
       borderColor: isDown ? "var(--error-color)" : hasData ? nodeColor : "var(--border-light)",
@@ -85,8 +85,15 @@ function NodeCard({ n, i, isPrimary, isReplica, isDown, isSimDown, isReallyDown,
         : isSimDown ? <span className="badge badge-error">SIMULATED DOWN</span>
         : hasData ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", alignItems: "center" }}>
-            <span className="badge" style={{ background: isPrimary ? nodeColor : "var(--bg-surface)", color: isPrimary ? "white" : nodeColor, border: `1px solid ${nodeColor}` }}>
-              {isPrimary ? <><Star size={12} style={{marginRight:4}}/> PRIMARY</> : <><RefreshCw size={12} style={{marginRight:4}}/> REPLICA</>}
+            <span className="badge" style={{
+              background: isPrimary ? nodeColor : "var(--bg-surface)",
+              color: isPrimary ? "white" : nodeColor,
+              border: `1px solid ${nodeColor}`,
+              fontSize: isPrimary ? 9.5 : 10,
+              whiteSpace: "nowrap",
+              padding: "0.2rem 0.5rem"
+            }}>
+              {isPrimary ? <><Star size={12} style={{marginRight:4}}/> PRIMARY REPLICA</> : <><RefreshCw size={12} style={{marginRight:4}}/> REPLICA</>}
             </span>
             <div style={{ fontSize: 10, color: "var(--text-secondary)", background: "var(--bg-app)", padding: "2px 6px", borderRadius: 4 }}>
               {selectedUser?.user_id}
@@ -201,7 +208,7 @@ export default function Replication({ nodes, nodesWithTokens, selectedUser, rf, 
                 ))}.
               </>
             ) : (
-              <>The data <strong>{selectedUser.user_id}</strong> is stored on <strong>{actualRf} node(s)</strong>: Node {primaryNodeIdx + 1} (Primary) + {actualRf - 1} replica(s).
+              <>The data <strong>{selectedUser.user_id}</strong> is stored on <strong>{actualRf} node(s)</strong>: Node {primaryNodeIdx + 1} (Primary Replica) + {actualRf - 1} replica(s).
                 {rf > nodes.length && <span style={{ color: "var(--error-color)", display: "block", marginTop: 4 }}><AlertTriangle size={14} style={{marginRight:4}}/> RF ({rf}) &gt; number of nodes ({nodes.length}). Cassandra can only make {nodes.length} copies.</span>}
               </>
             )}

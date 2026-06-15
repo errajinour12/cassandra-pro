@@ -222,11 +222,11 @@ function DcRing({ dcName, dcNodes, dcNodesWithTokens, globalIndices, highlightTo
         .text(`N${(globalIndices?.[i] ?? i) + 1}`);
 
       if (isPrimary) {
-        svg.append("rect").attr("x", x - 33).attr("y", y + 25).attr("width", 66).attr("height", 18).attr("rx", 9)
+        svg.append("rect").attr("x", x - 52).attr("y", y + 25).attr("width", 104).attr("height", 18).attr("rx", 9)
           .attr("fill", nodeColor).style("filter", "drop-shadow(0 2px 4px rgba(0,0,0,0.2))");
         svg.append("text").attr("x", x).attr("y", y + 35)
           .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", 9).attr("font-weight", "700")
-          .attr("letter-spacing", "0.5px").attr("font-family", "Inter").text("PRIMARY");
+          .attr("letter-spacing", "0.5px").attr("font-family", "Inter").text("PRIMARY REPLICA");
       }
     });
 
@@ -389,7 +389,7 @@ export default function TokenRing({ nodes, nodesWithTokens, highlightToken, down
             </li>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
               <MapPin size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
-              <span>The point indicates where data lands <strong>in each DC</strong>. The node marked <em>PRIMARY</em> is responsible for it locally.</span>
+              <span>The point indicates where data lands <strong>in each DC</strong>. The node marked <em>PRIMARY REPLICA</em> is responsible for it locally.</span>
             </li>
             <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
               <Zap size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
@@ -527,11 +527,11 @@ function SingleRing({ nodes, nodesWithTokens, highlightToken, downNodes }) {
         .text(`N${i + 1}`);
 
       if (isPrimary) {
-        svg.append("rect").attr("x", x - 35).attr("y", y + 26).attr("width", 70).attr("height", 20).attr("rx", 10)
+        svg.append("rect").attr("x", x - 55).attr("y", y + 26).attr("width", 110).attr("height", 20).attr("rx", 10)
           .attr("fill", nodeColor).style("filter", "drop-shadow(0 2px 4px rgba(0,0,0,0.2))");
         svg.append("text").attr("x", x).attr("y", y + 37)
           .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", 10).attr("font-weight", "700")
-          .attr("letter-spacing", "0.5px").attr("font-family", "Inter").text("PRIMARY");
+          .attr("letter-spacing", "0.5px").attr("font-family", "Inter").text("PRIMARY REPLICA");
       }
     });
 
@@ -576,7 +576,7 @@ function SingleRing({ nodes, nodesWithTokens, highlightToken, downNodes }) {
           </li>
           <li style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
             <MapPin size={16} style={{ color: "var(--primary-color)", marginTop: 2, flexShrink: 0 }} />
-            <span>The point indicates the location of your data. It naturally falls into the portion managed by its <strong>Primary Node</strong>.</span>
+            <span>The point indicates the location of your data. It naturally falls into the portion managed by its <strong>Primary Replica Node</strong>.</span>
           </li>
         </ul>
       </div>

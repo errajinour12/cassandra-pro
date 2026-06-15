@@ -207,7 +207,7 @@ export default function FailureSimulator({ nodes, nodesWithTokens, selectedUser,
     return (
       <div key={n.address} onClick={() => !isReallyDown && toggle(n.address)}
         style={{
-          width: 130, padding: "1rem 0.75rem", borderRadius: 12, textAlign: "center",
+          width: 142, padding: "1rem 0.5rem", borderRadius: 12, textAlign: "center",
           cursor: isReallyDown ? "not-allowed" : "pointer", userSelect: "none",
           background: isDown ? "var(--error-bg)" : hasData ? "var(--bg-surface)" : "var(--bg-app)",
           border: `2px solid ${isDown ? "var(--error-color)" : hasData ? nodeColor : "var(--border-light)"}`,
@@ -225,8 +225,18 @@ export default function FailureSimulator({ nodes, nodesWithTokens, selectedUser,
             : isSimDown
               ? <span className="badge badge-error" style={{ fontSize: 10 }}><PowerOff size={10} style={{ marginRight: 4 }}/> SIMULATED</span>
               : hasData
-                ? <span className="badge" style={{ fontSize: 10, background: `${nodeColor}15`, color: nodeColor, border: `1px solid ${nodeColor}40`, display: "flex", alignItems: "center", gap: "0.2rem" }}>
-                    {isPrimary ? <><Star size={10} /> PRIMARY</> : <><RefreshCw size={10} /> REPLICA</>}
+                ? <span className="badge" style={{
+                    fontSize: isPrimary ? 9.5 : 10,
+                    background: isPrimary ? nodeColor : "var(--bg-surface)",
+                    color: isPrimary ? "white" : nodeColor,
+                    border: `1px solid ${nodeColor}`,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    whiteSpace: "nowrap",
+                    padding: "0.2rem 0.5rem"
+                  }}>
+                    {isPrimary ? <><Star size={10} style={{ marginRight: 4 }} /> PRIMARY REPLICA</> : <><RefreshCw size={10} style={{ marginRight: 4 }} /> REPLICA</>}
                   </span>
                 : <span className="badge badge-neutral" style={{ fontSize: 10 }}>Empty</span>}
         </div>
